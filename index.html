@@ -3,268 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>上海助手 Pro V5</title>
+    <title>上海行程・墨色導覽</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: -apple-system, "PingFang TC", sans-serif; background-color: #f2f2f7; -webkit-user-select: none; }
-        .app-card { background: white; border-radius: 20px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02); }
-        .drag-handle { cursor: grab; color: #d1d1d6; padding: 5px 10px; }
-        .ghost { opacity: 0.2; background: #c8c8d0; }
-        .nav-fixed { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-top: 0.5px solid #d1d1d6; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .recomm-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: #f0f9ff; color: #0369a1; font-weight: bold; }
-        textarea { -webkit-user-select: text; user-select: text; border: none; outline: none; resize: none; width: 100%; background: #f9f9fb; border-radius: 12px; padding: 10px; font-size: 12px; margin-top: 8px; }
+        :root { --zhusha-red: #B22222; --mo-black: #2C2C2C; --paper-white: #F9F4E8; }
+        body { font-family: "PingFang TC", "STHeiti", serif; background-color: var(--paper-white); color: var(--mo-black); }
+        .app-card { background: white; border-radius: 8px; border: 1px solid #E2D5B5; box-shadow: 3px 3px 0px rgba(0,0,0,0.05); margin-bottom: 16px; position: relative; overflow: hidden; }
+        .app-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--zhusha-red); }
+        .nav-fixed { position: fixed; bottom: 0; width: 100%; background: rgba(249, 244, 232, 0.95); backdrop-filter: blur(10px); border-top: 2px solid var(--mo-black); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .btn-primary { background: var(--zhusha-red); color: white; border-radius: 4px; }
+        .recomm-badge { font-size: 10px; border: 1px solid var(--zhusha-red); color: var(--zhusha-red); padding: 1px 4px; border-radius: 2px; margin-right: 4px; flex-shrink: 0; }
+        .spot-link { display: inline-flex; items-center: center; background: #fdfaf3; border: 0.5px solid #e2d5b5; padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px; color: #444; }
+        .spot-link:active { background: #e2d5b5; scale: 0.95; }
+        textarea { background: #F2F0E6; border: none; outline: none; width: 100%; border-radius: 4px; padding: 10px; font-size: 13px; margin-top: 10px; color: #555; }
+        h2 { border-bottom: 1px solid var(--mo-black); display: inline-block; padding-bottom: 2px; }
+        /* 刪除按鈕樣式 */
+        .del-btn { color: #ccc; transition: color 0.2s; padding: 10px; }
+        .del-btn:active { color: var(--zhusha-red); scale: 1.2; }
     </style>
 </head>
 <body class="pb-32">
 
-    <header class="p-5 bg-white flex justify-between items-end sticky top-0 z-50 border-b">
-        <div>
-            <h1 class="text-2xl font-black text-gray-900">上海行程</h1>
-            <p class="text-[10px] text-blue-500 font-bold tracking-tighter">TRAVEL & BUDGET ASSISTANT</p>
+    <header class="p-6 flex justify-between items-center border-b-2 border-black sticky top-0 bg-[#F9F4E8] z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-[#B22222] flex items-center justify-center text-white font-serif text-xl border-2 border-black">滬</div>
+            <div>
+                <h1 class="text-xl font-bold tracking-widest">上海考試手冊</h1>
+                <p class="text-[10px] opacity-60 uppercase">2026 July Exam Trip</p>
+            </div>
         </div>
-        <button onclick="openModal()" class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
-            <i class="fas fa-plus"></i>
-        </button>
+        <button onclick="openModal()" class="text-2xl hover:text-[#B22222]"><i class="fas fa-plus-square"></i></button>
     </header>
 
-    <main class="p-4" id="main-container"></main>
+    <main class="p-5" id="main-container"></main>
 
-    <section id="budget-section" class="p-4 hidden">
-        <h2 class="text-xl font-bold mb-4 px-2">💰 分類記帳</h2>
-        <div class="app-card">
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <input id="exp-name" type="text" placeholder="項目" class="col-span-2 p-3 bg-gray-100 rounded-xl outline-none">
-                <input id="exp-amount" type="number" placeholder="金額 ¥" class="p-3 bg-gray-100 rounded-xl outline-none">
-                <select id="exp-cat" class="p-3 bg-gray-100 rounded-xl outline-none font-bold">
-                    <option value="用餐">用餐 🍱</option>
-                    <option value="交通">交通 🚇</option>
-                    <option value="住宿">住宿 🏨</option>
-                    <option value="門票">門票 🎟️</option>
+    <section id="budget-section" class="p-5 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-bold italic">〈 盤纏帳本 〉</h2>
+            <div class="text-[10px] font-bold text-red-700 underline">匯率 1 : 4.5</div>
+        </div>
+        <div class="app-card p-4 bg-[#FFFEFA]">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <input id="exp-name" type="text" placeholder="項目內容" class="col-span-2 p-3 border-b-2 border-gray-100 outline-none">
+                <input id="exp-amount" type="number" placeholder="金額 (¥)" class="p-3 bg-gray-50 outline-none">
+                <select id="exp-cat" class="p-3 bg-gray-50 outline-none">
+                    <option value="用餐">用餐 🍜</option><option value="交通">交通 🚇</option>
+                    <option value="住宿">住宿 🏨</option><option value="門票">門票 🎟️</option>
                     <option value="購物">購物 🛍️</option>
                 </select>
-                <button onclick="addExpense()" class="col-span-2 bg-blue-600 text-white py-3 rounded-xl font-bold mt-2">新增紀錄</button>
+                <button onclick="addExpense()" class="col-span-2 btn-primary py-3 font-bold shadow-md active:scale-95 transition-all">入帳</button>
             </div>
             
-            <div id="expense-list" class="space-y-3"></div>
+            <div id="expense-list" class="space-y-1 mt-6"></div>
             
-            <div class="mt-8 pt-6 border-t border-dashed">
-                <h3 class="text-sm font-bold text-gray-400 mb-3">分類小計</h3>
-                <div id="cat-summary" class="grid grid-cols-2 gap-2"></div>
-                <div class="flex justify-between items-end mt-6">
-                    <span class="text-gray-400 text-xs">總支出累計</span>
-                    <span id="total-amount" class="text-2xl font-black text-gray-900">¥ 0</span>
+            <div class="mt-8 pt-6 border-t-2 border-black">
+                <div id="cat-summary" class="grid grid-cols-2 gap-2 mb-6 text-center"></div>
+                <div class="flex flex-col items-end">
+                    <div id="total-rmb" class="text-xl font-bold text-red-800">¥ 0.00</div>
+                    <div id="total-twd" class="text-sm font-bold text-gray-600">≈ NT$ 0</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <div id="modal" class="fixed inset-0 bg-black/40 hidden z-[200] flex items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6">
-            <h3 class="font-bold text-lg mb-4 text-center">新增行程點</h3>
-            <select id="new-day" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none">
-                <option value="07/04">07/04 (五)</option><option value="07/05">07/05 (六)</option>
-                <option value="07/06">07/06 (日)</option><option value="07/07">07/07 (一)</option>
-                <option value="07/08">07/08 (二)</option>
-            </select>
-            <input id="new-title" type="text" placeholder="名稱 (如：豫園)" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none">
-            <select id="new-type" class="w-full p-3 bg-gray-100 rounded-xl mb-5 outline-none font-bold">
-                <option value="spot">景點 📍</option><option value="food">用餐 🍜</option>
-                <option value="transport">交通 🚌</option><option value="hotel">住宿 🏨</option>
-                <option value="exam">考試 ✍️</option>
-            </select>
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-400">取消</button>
-                <button onclick="addNewSchedule()" class="flex-1 py-3 bg-black text-white rounded-xl font-bold">確認</button>
+    <div id="modal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-8">
+        <div class="bg-[#F9F4E8] border-4 border-black p-6 w-full max-w-sm relative">
+            <h3 class="font-bold text-center mb-6 border-b border-black pb-2">新增行程</h3>
+            <select id="new-day" class="w-full p-3 mb-4 border border-black outline-none"><option value="07/04">07/04</option><option value="07/05">07/05</option><option value="07/06">07/06</option><option value="07/07">07/07</option><option value="07/08">07/08</option></select>
+            <input id="new-title" type="text" placeholder="地點名稱" class="w-full p-3 mb-4 border border-black outline-none">
+            <select id="new-type" class="w-full p-3 mb-6 border border-black outline-none"><option value="spot">景點 📍</option><option value="food">用餐 🍜</option><option value="transport">交通 🚇</option><option value="hotel">住宿 🏨</option><option value="exam">考試 ✍️</option></select>
+            <div class="flex gap-4">
+                <button onclick="closeModal()" class="flex-1 py-3 border-2 border-black font-bold">取消</button>
+                <button onclick="addNewSchedule()" class="flex-1 py-3 bg-black text-white font-bold">確認</button>
             </div>
         </div>
     </div>
 
-    <nav class="nav-fixed flex justify-around p-3 text-gray-400 font-bold">
-        <button onclick="showTab('schedule')" id="btn-sch" class="flex flex-col items-center text-blue-600">
-            <i class="fas fa-calendar-alt text-lg"></i><span class="text-[10px]">行程</span>
-        </button>
-        <button onclick="showTab('budget')" id="btn-bud" class="flex flex-col items-center">
-            <i class="fas fa-wallet text-lg"></i><span class="text-[10px]">記帳</span>
-        </button>
+    <nav class="nav-fixed flex justify-around p-4 text-black font-bold">
+        <button onclick="showTab('schedule')" id="btn-sch" class="flex flex-col items-center text-[#B22222]"><i class="fas fa-scroll text-xl mb-1"></i><span class="text-[10px]">行程</span></button>
+        <button onclick="showTab('budget')" id="btn-bud" class="flex flex-col items-center opacity-40"><i class="fas fa-coins text-xl mb-1"></i><span class="text-[10px]">盤纏</span></button>
     </nav>
 
     <script>
+        const RATE = 4.5;
         const CATEGORY_ICONS = { food: '🍜', exam: '✍️', spot: '📍', transport: '🚇', hotel: '🏨' };
-        
-        // 推薦資料庫 (根據區域)
         const RECOMMENDATIONS = {
-            "虹橋/市區": {
-                restaurants: ["南翔饅頭店", "上海老飯店", "哈靈麵館"],
-                spots: ["武康大樓", "安福路", "田子坊"],
-                souvenirs: ["大白兔奶糖", "蝴蝶酥", "上海女人雪花膏"]
-            },
-            "朱家角/青浦": {
-                restaurants: ["阿婆粽", "茂記醬園", "井亭大肉"],
-                spots: ["放生橋", "課植園", "圓津禪院"],
-                souvenirs: ["紮肉", "芡實糕", "朱家角手工扇"]
-            },
-            "靜安/外灘": {
-                restaurants: ["蟹叁寳", "沪西老弄堂", "佳家湯包"],
-                spots: ["四行倉庫", "朵雲書院", "南京路步行街"],
-                souvenirs: ["第一食品特產", "沈大成糕點", "三陽南貨"]
-            }
+            "市區": { restaurants: ["南翔饅頭", "哈靈麵館"], spots: ["武康大樓", "安福路", "田子坊"], souvenirs: ["大白兔", "蝴蝶酥", "雪花膏"] },
+            "古鎮": { restaurants: ["阿婆粽", "井亭大肉"], spots: ["放生橋", "課植園", "圓津禪院"], souvenirs: ["紮肉", "芡實糕", "手工扇"] },
+            "外灘": { restaurants: ["蟹叁寳", "佳家湯包"], spots: ["四行倉庫", "朵雲書院", "南京路"], souvenirs: ["沈大成", "雪花膏", "三陽南貨"] }
         };
 
-        function getRecommByTitle(title) {
-            if(title.includes("朱家角")) return RECOMMENDATIONS["朱家角/青浦"];
-            if(title.includes("靜安") || title.includes("外灘") || title.includes("南京路")) return RECOMMENDATIONS["靜安/外灘"];
-            return RECOMMENDATIONS["虹橋/市區"];
+        function getRecomm(title) {
+            if(title.includes("朱家角")) return RECOMMENDATIONS["古鎮"];
+            if(title.includes("外灘") || title.includes("靜安") || title.includes("四行")) return RECOMMENDATIONS["外灘"];
+            return RECOMMENDATIONS["市區"];
         }
 
-        let schedules = JSON.parse(localStorage.getItem('sh_v5_sch')) || {
-            "07/04": [{id:1, title:"虹橋機場 / 凱悅嘉寓飯店", type:"hotel"}],
-            "07/05": [{id:2, title:"國家資格考試 (虹橋)", type:"exam"}, {id:3, title:"朱家角古鎮 (華舒逸飯店)", type:"spot"}],
-            "07/06": [{id:4, title:"安福路 / 田子坊", type:"spot"}, {id:5, title:"上海四行倉庫", type:"spot"}, {id:6, title:"幾木筱築飯店 (靜安寺)", type:"hotel"}],
-            "07/07": [{id:7, title:"豫園 / 上海城隍廟", type:"spot"}, {id:8, title:"南京路步行街 / 外灘", type:"spot"}, {id:9, title:"朵云书院·旗舰店", type:"spot"}],
-            "07/08": [{id:10, title:"靜安寺 祈福", type:"spot"}, {id:11, title:"虹橋機場 返台", type:"transport"}]
+        let schedules = JSON.parse(localStorage.getItem('sh_v8_sch')) || {
+            "07/04": [{id:1, title:"虹橋機場 / 凱悅嘉寓", type:"hotel"}],
+            "07/05": [{id:2, title:"上海國家考試", type:"exam"}, {id:3, title:"朱家角古鎮", type:"spot"}],
+            "07/06": [{id:4, title:"四行倉庫 / 靜安寺", type:"spot"}],
+            "07/07": [{id:5, title:"外灘 / 朵雲書院", type:"spot"}],
+            "07/08": [{id:6, title:"靜安寺巡禮 / 返台", type:"transport"}]
         };
-        let expenses = JSON.parse(localStorage.getItem('sh_v5_exp')) || [];
+        let expenses = JSON.parse(localStorage.getItem('sh_v8_exp')) || [];
 
         function renderSchedules() {
             const container = document.getElementById('main-container');
             container.innerHTML = '';
             Object.keys(schedules).forEach(day => {
                 const section = document.createElement('section');
-                section.className = "mb-8";
-                section.innerHTML = `<h2 class="text-xs font-black text-gray-400 mb-3 px-2 flex justify-between"><span>📅 ${day}</span><span class="text-[9px]">DRAG TO SORT</span></h2><div id="list-${day.replace('/','-')}" class="sortable-list min-h-[50px]"></div>`;
+                section.className = "mb-10";
+                section.innerHTML = `<h2 class="text-sm font-bold italic mb-4">〔 ${day} 〕</h2><div id="list-${day.replace('/','-')}" class="sortable-list"></div>`;
                 container.appendChild(section);
 
-                const listEl = section.querySelector('.sortable-list');
                 schedules[day].forEach(item => {
-                    const rec = getRecommByTitle(item.title);
+                    const rec = getRecomm(item.title);
+                    const spotLinks = rec.spots.map(s => `<button onclick="goAmap('${s}')" class="spot-link"><i class="fas fa-location-dot mr-1 text-[9px] opacity-50"></i>${s}</button>`).join('');
                     const card = document.createElement('div');
-                    card.className = "app-card";
+                    card.className = "app-card p-4";
                     card.dataset.id = item.id;
                     card.dataset.type = item.type;
                     card.innerHTML = `
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="drag-handle"><i class="fas fa-ellipsis-v"></i></div>
-                            <div class="flex-grow font-black text-gray-800 flex items-center">
-                                <span class="mr-2">${CATEGORY_ICONS[item.type] || '📌'}</span>
-                                ${item.title}
+                        <div class="flex items-start gap-3">
+                            <div class="drag-handle mt-1"><i class="fas fa-grip-vertical opacity-20"></i></div>
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <div class="font-bold text-lg mb-2">${CATEGORY_ICONS[item.type]} ${item.title}</div>
+                                    <button onclick="goAmap('${item.title}')" class="text-red-800"><i class="fas fa-map-marked-alt"></i></button>
+                                </div>
+                                <div class="text-[11px] leading-6 mb-3">
+                                    <div class="flex"><span class="recomm-badge">饌</span> <span class="text-gray-500">${rec.restaurants.join('・')}</span></div>
+                                    <div class="flex items-start mt-1"><span class="recomm-badge" style="border-color:#15803d; color:#15803d;">景</span> <div class="flex flex-wrap">${spotLinks}</div></div>
+                                    <div class="flex mt-1"><span class="recomm-badge" style="border-color:#555; color:#555;">物</span> <span class="text-gray-500">${rec.souvenirs.join('・')}</span></div>
+                                </div>
+                                <textarea onblur="saveAllData()">${item.note || ''}</textarea>
                             </div>
-                            <button onclick="goAmap('${item.title}')" class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
-                                <i class="fas fa-location-arrow text-[10px]"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="mt-4 pt-3 border-t border-gray-50">
-                            <div class="mb-2"><span class="recomm-badge mr-1">🍽️ 推薦餐廳</span> <span class="text-[11px] text-gray-500">${rec.restaurants.join('、')}</span></div>
-                            <div class="mb-2"><span class="recomm-badge mr-1" style="background:#f0fdf4; color:#15803d;">🌳 推薦景點</span> <span class="text-[11px] text-gray-500">${rec.spots.join('、')}</span></div>
-                            <div class="mb-3"><span class="recomm-badge mr-1" style="background:#fff7ed; color:#c2410c;">🎁 必買特產</span> <span class="text-[11px] text-gray-500">${rec.souvenirs.join('、')}</span></div>
-                        </div>
-
-                        <textarea onblur="saveNotes(this, '${item.id}')" placeholder="點擊記錄詳細地點、備註或心情...">${item.note || ''}</textarea>
-                    `;
-                    listEl.appendChild(card);
+                        </div>`;
+                    section.querySelector('.sortable-list').appendChild(card);
                 });
-
-                new Sortable(listEl, { group: 'shared', animation: 250, handle: '.drag-handle', forceFallback: true, onEnd: saveAllData });
+                new Sortable(section.querySelector('.sortable-list'), { group:'shared', animation:200, handle:'.drag-handle', onEnd: saveAllData });
             });
         }
 
         function saveAllData() {
             const newSch = {};
             document.querySelectorAll('.sortable-list').forEach(list => {
-                const day = list.id.replace('list-', '').replace('-', '/');
+                const day = list.id.replace('list-','').replace('-','/');
                 newSch[day] = [];
                 list.querySelectorAll('.app-card').forEach(card => {
-                    newSch[day].push({
-                        id: card.dataset.id,
-                        title: card.querySelector('.font-black').innerText.substring(3).trim(),
-                        type: card.dataset.type,
-                        note: card.querySelector('textarea').value
-                    });
+                    newSch[day].push({ id:card.dataset.id, title:card.querySelector('.font-bold').innerText.split(' ')[1], type:card.dataset.type, note:card.querySelector('textarea').value });
                 });
             });
-            schedules = newSch;
-            localStorage.setItem('sh_v5_sch', JSON.stringify(schedules));
+            schedules = newSch; localStorage.setItem('sh_v8_sch', JSON.stringify(schedules));
         }
 
-        function saveNotes() { saveAllData(); }
-
-        function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
-
-        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-
-        function addNewSchedule() {
-            const d = document.getElementById('new-day').value;
-            const t = document.getElementById('new-title').value;
-            const ty = document.getElementById('new-type').value;
-            if(t) {
-                schedules[d].push({ id: Date.now(), title: t, type: ty, note: "" });
-                saveAllData(); renderSchedules(); closeModal();
-            }
-        }
-
-        // 記帳與分類邏輯
+        // --- 記帳功能核心更新 ---
         function renderExpenses() {
-            const list = document.getElementById('expense-list');
-            const summaryEl = document.getElementById('cat-summary');
-            let sum = 0; 
-            let catSum = { "用餐":0, "交通":0, "住宿":0, "門票":0, "購物":0 };
-            
+            const list = document.getElementById('expense-list'), summaryEl = document.getElementById('cat-summary');
+            let rmbTotal = 0, catSum = { "用餐":0, "交通":0, "住宿":0, "門票":0, "購物":0 };
             list.innerHTML = '';
-            expenses.reverse().forEach(ex => {
-                sum += parseFloat(ex.amount);
-                catSum[ex.cat] += parseFloat(ex.amount);
-                list.innerHTML += `<div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl text-sm border-l-4 ${getCatColor(ex.cat)}">
-                    <div><span class="font-bold mr-2">${ex.cat}</span><span class="text-gray-500 text-xs">${ex.name}</span></div>
-                    <span class="font-black">¥${ex.amount}</span>
-                </div>`;
+
+            expenses.slice().reverse().forEach((ex, originalIndex) => {
+                const actualIndex = expenses.length - 1 - originalIndex; // 取得在原始陣列中的索引
+                let rmb = parseFloat(ex.amount);
+                rmbTotal += rmb; catSum[ex.cat] += rmb;
+                
+                list.innerHTML += `
+                    <div class="flex justify-between items-center py-3 border-b border-gray-100 bg-white">
+                        <div class="flex items-center">
+                            <button onclick="deleteExpense(${actualIndex})" class="del-btn mr-1">
+                                <i class="fas fa-trash-can"></i>
+                            </button>
+                            <div class="text-xs">
+                                <div class="font-bold text-red-700">${ex.cat}</div>
+                                <div>${ex.name}</div>
+                            </div>
+                        </div>
+                        <div class="text-right font-mono">
+                            <div class="font-bold">¥${rmb}</div>
+                            <div class="text-[9px] text-gray-400">NT$${Math.round(rmb * RATE)}</div>
+                        </div>
+                    </div>`;
             });
-            expenses.reverse(); // 恢復順序
 
-            summaryEl.innerHTML = '';
-            Object.keys(catSum).forEach(c => {
-                summaryEl.innerHTML += `<div class="bg-gray-50 p-2 rounded-lg text-center">
-                    <div class="text-[10px] text-gray-400">${c}</div>
-                    <div class="text-xs font-black">¥${catSum[c]}</div>
-                </div>`;
-            });
-
-            document.getElementById('total-amount').innerText = `¥ ${sum}`;
-            localStorage.setItem('sh_v5_exp', JSON.stringify(expenses));
-        }
-
-        function getCatColor(c) {
-            const colors = { "用餐":"border-orange-400", "交通":"border-blue-400", "住宿":"border-purple-400", "門票":"border-green-400", "購物":"border-pink-400" };
-            return colors[c] || "border-gray-400";
+            summaryEl.innerHTML = Object.keys(catSum).map(c => `<div class="p-2 border border-dashed border-gray-300 rounded"><div class="text-[9px] text-gray-400">${c}</div><div class="text-[11px] font-bold text-red-900">¥${catSum[c]}</div></div>`).join('');
+            document.getElementById('total-rmb').innerText = `¥ ${rmbTotal.toFixed(2)}`;
+            document.getElementById('total-twd').innerText = `≈ NT$ ${Math.round(rmbTotal * RATE).toLocaleString()}`;
+            localStorage.setItem('sh_v8_exp', JSON.stringify(expenses));
         }
 
         function addExpense() {
-            const n = document.getElementById('exp-name');
-            const a = document.getElementById('exp-amount');
-            const c = document.getElementById('exp-cat');
-            if(n.value && a.value) {
-                expenses.push({ name: n.value, amount: a.value, cat: c.value });
-                n.value = ''; a.value = '';
+            const n = document.getElementById('exp-name'), a = document.getElementById('exp-amount'), c = document.getElementById('exp-cat');
+            if(n.value && a.value) { 
+                expenses.push({ name: n.value, amount: a.value, cat: c.value }); 
+                n.value = ''; a.value = ''; 
+                renderExpenses(); 
+            }
+        }
+
+        function deleteExpense(index) {
+            if(confirm('確定要刪除這筆帳目嗎？')) {
+                expenses.splice(index, 1);
                 renderExpenses();
             }
         }
 
-        function showTab(tab) {
-            const s = document.getElementById('main-container'), b = document.getElementById('budget-section');
-            if(tab === 'schedule') {
-                s.classList.remove('hidden'); b.classList.add('hidden');
-                document.getElementById('btn-sch').classList.add('text-blue-600');
-                document.getElementById('btn-bud').classList.remove('text-blue-600');
-            } else {
-                s.classList.add('hidden'); b.classList.remove('hidden');
-                document.getElementById('btn-bud').classList.add('text-blue-600');
-                document.getElementById('btn-sch').classList.remove('text-blue-600');
-                renderExpenses();
-            }
+        function showTab(t) {
+            document.getElementById('main-container').classList.toggle('hidden', t==='budget');
+            document.getElementById('budget-section').classList.toggle('hidden', t==='schedule');
+            document.getElementById('btn-sch').style.opacity = t==='schedule' ? '1' : '0.4';
+            document.getElementById('btn-bud').style.opacity = t==='budget' ? '1' : '0.4';
+            if(t==='budget') renderExpenses();
         }
 
+        function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function addNewSchedule() {
+            const d = document.getElementById('new-day').value, t = document.getElementById('new-title').value, ty = document.getElementById('new-type').value;
+            if(t) { schedules[d].push({ id:Date.now(), title:t, type:ty, note:"" }); saveAllData(); renderSchedules(); closeModal(); }
+        }
         window.onload = renderSchedules;
     </script>
 </body>
