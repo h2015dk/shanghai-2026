@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>上海行程助手 Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, sans-serif; background-color: #f2f2f7; -webkit-user-select: none; }
+        .app-card { background: white; border-radius: 18px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .drag-handle { cursor: grab; color: #d1d1d6; padding: 10px 15px 10px 5px; }
+        .ghost { opacity: 0.2; background: #c8c8d0; }
+        .nav-fixed { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-top: 0.5px solid #d1d1d6; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        textarea { -webkit-user-select: text; user-select: text; } /* 確保輸入框可以點選 */
+
+        /* 分類圖示顏色 */
+        .icon-food { color: #d97706; } /* 橘色 */
+        .icon-exam { color: #dc2626; } /* 紅色 */
+        .icon-spot { color: #10b981; } /* 綠色 */
+        .icon-transport { color: #3b82f6; } /* 藍色 */
+        .icon-hotel { color: #7c3aed; } /* 紫色 */
+        .icon-important { color: #eab308; } /* 黃色 */
+    </style>
+</head>
+<body class="pb-32">
+
+    <header class="p-5 bg-white flex justify-between items-center sticky top-0 z-50 border-b">
+        <h1 class="text-xl font-black text-gray-900">上海行程</h1>
+        <button onclick="openModal()" class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform">
+            <i class="fas fa-plus"></i>
+        </button>
+    </header>
+
+    <main class="p-4" id="main-container">
+        </main>
+
+    <section id="budget-section" class="p-4 hidden">
+        <h2 class="text-xl font-bold mb-4 px-2">💰 支出記帳</h2>
+        <div class="app-card">
+            <div class="flex gap-2 mb-4">
+                <input id="exp-name" type="text" placeholder="項目" class="flex-grow p-3 bg-gray-100 rounded-xl text-sm outline-none">
+                <input id="exp-amount" type="number" placeholder="¥" class="w-20 p-3 bg-gray-100 rounded-xl text-sm outline-none">
+                <button onclick="addExpense()" class="bg-blue-600 text-white px-5 rounded-xl font-bold">＋</button>
+            </div>
+            <div id="expense-list" class="space-y-2"></div>
+            <div class="mt-6 pt-4 border-t flex justify-between items-end font-bold text-xl">
+                <span class="text-gray-400 text-sm font-normal">總支出</span>
+                <span id="total-amount">¥ 0</span>
+            </div>
+        </div>
+    </section>
+
+    <div id="modal" class="fixed inset-0 bg-black/40 hidden z-[200] flex items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6">
+            <h3 class="font-bold text-lg mb-4 text-center">新增地點</h3>
+            <select id="new-day" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none">
+                <option value="07/04">07/04 (五)</option><option value="07/05">07/05 (六)</option>
+                <option value="07/06">07/06 (日)</option><option value="07/07">07/07 (一)</option>
+                <option value="07/08">07/08 (二)</option>
+            </select>
+            <input id="new-title" type="text" placeholder="名稱 (如：外灘)" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none">
+            <select id="new-type" class="w-full p-3 bg-gray-100 rounded-xl mb-4 outline-none">
+                <option value="spot">景點 📍</option>
+                <option value="food">吃飯 🍜</option>
+                <option value="transport">交通 🚌</option>
+                <option value="hotel">住宿 🏨</option>
+                <option value="exam">考試 ✍️</option>
+                <option value="important">重要 ⭐️</option>
+            </select>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 rounded-xl">取消</button>
+                <button onclick="addNewSchedule()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-fixed flex justify-around p-3 text-gray-400 font-bold">
+        <button onclick="showTab('schedule')" id="btn-sch" class="flex flex-col items-center text-blue-600">
+            <i class="fas fa-route text-lg"></i><span class="text-[10px]">行程</span>
+        </button>
+        <button onclick="showTab('budget')" id="btn-bud" class="flex flex-col items-center">
+            <i class="fas fa-yen-sign text-lg"></i><span class="text-[10px]">記帳</span>
+        </button>
+    </nav>
+
+    <script>
+        const CATEGORY_ICONS = {
+            food: '🍜', exam: '✍️', spot: '📍', transport: '🚌', hotel: '🏨', important: '⭐️'
+        };
+
+        // 從 localStorage 加載或使用預設資料
+        let schedules = JSON.parse(localStorage.getItem('sh_v4_sch')) || {
+            "07/04": [{id:1, title:"虹橋機場/飯店", type:"transport"}, {id:2, title:"凱悅嘉寓飯店", type:"hotel"}],
+            "07/05": [{id:3, title:"國家資格考試", type:"exam", note: "虹君同行，務必帶齊證件"}, {id:4, title:"朱家角古鎮", type:"spot", note: "華舒逸飯店 #826"}],
+            "07/06": [{id:5, title:"沪西老弄堂面馆", type:"food", note: "必吃蛤蜊豬肝麵、炸豬排"}, {id:6, title:"靜安寺飯店", type:"hotel", note: "#2875/2"}],
+            "07/07": [{id:7, title:"南京路步道", type:"spot"}, {id:8, title:"外灘夜景", type:"spot"}, {id:9, title:"蟹叁寳", type:"food", note: "午餐：蟹黃撈飯"}],
+            "07/08": [{id:10, title:"靜安寺", type:"spot", note: "祈福巡禮"}, {id:11, title:"虹橋機場", type:"transport", note: "返台行程"}]
+        };
+        let expenses = JSON.parse(localStorage.getItem('sh_v4_exp')) || [];
+
+        function getCategoryIcon(type) {
+            return CATEGORY_ICONS[type] || '📌'; // 默認圖示
+        }
+
+        function renderSchedules() {
+            const container = document.getElementById('main-container');
+            container.innerHTML = '';
+            Object.keys(schedules).forEach(day => {
+                const section = document.createElement('section');
+                section.className = "mb-8";
+                section.innerHTML = `<h2 class="text-xs font-black text-blue-500 mb-3 px-2">📅 ${day}</h2><div id="list-${day.replace('/','-')}" class="sortable-list min-h-[50px]"></div>`;
+                container.appendChild(section);
+
+                const listEl = section.querySelector('.sortable-list');
+                schedules[day].forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "app-card";
+                    card.dataset.id = item.id;
+                    card.dataset.type = item.type; // 添加 data-type 屬性
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                            <div class="flex-grow font-bold text-gray-800 flex items-center">
+                                <span class="mr-2 text-lg">${getCategoryIcon(item.type)}</span>
+                                ${item.title}
+                            </div>
+                            <button onclick="goAmap('${item.title}')" class="bg-blue-50 text-blue-600 w-9 h-9 rounded-full flex items-center justify-center">
+                                <i class="fas fa-bus text-sm"></i>
+                            </button>
+                        </div>
+                        <textarea onblur="saveNotes(this, '${item.id}')" placeholder="點擊輸入說明或備註..." 
+                            class="w-full p-3 bg-gray-50 rounded-xl text-xs text-gray-500 border-none outline-none resize-none" rows="2">${item.note || ''}</textarea>
+                    `;
+                    listEl.appendChild(card);
+                });
+
+                new Sortable(listEl, {
+                    group: 'shared',
+                    animation: 250,
+                    handle: '.drag-handle',
+                    ghostClass: 'ghost',
+                    forceFallback: true,
+                    onEnd: saveAllData 
+                });
+            });
+        }
+
+        function saveAllData() {
+            const newSchedules = {};
+            document.querySelectorAll('.sortable-list').forEach(list => {
+                const dayKey = list.id.replace('list-', '').replace('-', '/');
+                newSchedules[dayKey] = [];
+                list.querySelectorAll('.app-card').forEach(card => {
+                    newSchedules[dayKey].push({
+                        id: card.dataset.id,
+                        title: card.querySelector('.font-bold').innerText.replace(getCategoryIcon(card.dataset.type), '').trim(), // 移除圖示
+                        type: card.dataset.type,
+                        note: card.querySelector('textarea').value
+                    });
+                });
+            });
+            schedules = newSchedules;
+            localStorage.setItem('sh_v4_sch', JSON.stringify(schedules));
+        }
+
+        function saveNotes(el, itemId) {
+            const dayKey = el.closest('.sortable-list').id.replace('list-', '').replace('-', '/');
+            const item = schedules[dayKey].find(s => s.id == itemId);
+            if (item) {
+                item.note = el.value;
+                localStorage.setItem('sh_v4_sch', JSON.stringify(schedules));
+            }
+        }
+
+        function goAmap(keyword) {
+            window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(keyword)}&dev=0&t=1`;
+        }
+
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function addNewSchedule() {
+            const day = document.getElementById('new-day').value;
+            const title = document.getElementById('new-title').value;
+            const type = document.getElementById('new-type').value; // 獲取選定的類型
+            if(title) {
+                schedules[day].push({ id: Date.now(), title, type, note: "" });
+                localStorage.setItem('sh_v4_sch', JSON.stringify(schedules));
+                renderSchedules();
+                closeModal();
+            }
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expense-list');
+            let sum = 0; list.innerHTML = '';
+            expenses.forEach(ex => {
+                sum += parseFloat(ex.amount);
+                list.innerHTML += `<div class="flex justify-between p-3 bg-gray-50 rounded-xl text-sm"><span>${ex.name}</span><span class="font-bold font-mono">¥${ex.amount}</span></div>`;
+            });
+            document.getElementById('total-amount').innerText = `¥ ${sum}`;
+            localStorage.setItem('sh_v4_exp', JSON.stringify(expenses));
+        }
+
+        function addExpense() {
+            const n = document.getElementById('exp-name');
+            const a = document.getElementById('exp-amount');
+            if(n.value && a.value) {
+                expenses.push({ name: n.value, amount: a.value });
+                n.value = ''; a.value = '';
+                renderExpenses();
+            }
+        }
+
+        function showTab(tab) {
+            const s = document.getElementById('main-container');
+            const b = document.getElementById('budget-section');
+            if(tab === 'schedule') {
+                s.classList.remove('hidden'); b.classList.add('hidden');
+                document.getElementById('btn-sch').classList.add('text-blue-600');
+                document.getElementById('btn-bud').classList.remove('text-blue-600');
+            } else {
+                s.classList.add('hidden'); b.classList.remove('hidden');
+                document.getElementById('btn-bud').classList.add('text-blue-600');
+                document.getElementById('btn-sch').classList.remove('text-blue-600');
+                renderExpenses();
+            }
+        }
+
+        window.onload = renderSchedules;
+    </script>
+</body>
+</html>
