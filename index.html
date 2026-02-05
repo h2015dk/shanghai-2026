@@ -3,93 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>上海行程・墨色導覽</title>
+    <title>上海助手 V13 - 吉伊與駿馬</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --zhusha-red: #B22222; --mo-black: #2C2C2C; --paper-white: #F9F4E8; }
-        body { font-family: "PingFang TC", "STHeiti", serif; background-color: var(--paper-white); color: var(--mo-black); -webkit-user-select: none; }
-        .app-card { background: white; border-radius: 8px; border: 1px solid #E2D5B5; box-shadow: 3px 3px 0px rgba(0,0,0,0.05); margin-bottom: 16px; position: relative; overflow: hidden; }
-        .app-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--zhusha-red); }
-        .nav-fixed { position: fixed; bottom: 0; width: 100%; background: rgba(249, 244, 232, 0.95); backdrop-filter: blur(10px); border-top: 2px solid var(--mo-black); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .btn-primary { background: var(--zhusha-red); color: white; border-radius: 4px; }
-        .recomm-badge { font-size: 10px; border: 1px solid var(--zhusha-red); color: var(--zhusha-red); padding: 1px 4px; border-radius: 2px; margin-right: 4px; font-weight: bold; }
-        .spot-link { display: inline-flex; align-items: center; background: #fdfaf3; border: 0.5px solid #e2d5b5; padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px; color: #444; }
-        textarea { background: #F2F0E6; border: none; outline: none; width: 100%; border-radius: 4px; padding: 10px; font-size: 13px; margin-top: 10px; color: #555; -webkit-user-select: text; }
-        h2 { border-bottom: 1px solid var(--mo-black); display: inline-block; padding-bottom: 2px; }
-        .del-btn { color: #ccc; padding: 10px; }
-        /* 幣別切換樣式 */
-        .currency-btn { font-size: 10px; border: 1px solid #E2D5B5; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; }
+        
+        body { 
+            font-family: "PingFang TC", "STHeiti", serif; 
+            background-color: var(--paper-white); 
+            /* 背景融合：水墨紙張 + 駿馬浮水印 */
+            background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'), 
+                              url('https://images.unsplash.com/photo-1599408162172-74421074161c?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3');
+            background-blend-mode: multiply;
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+            color: var(--mo-black);
+            -webkit-user-select: none;
+        }
+
+        /* 吉伊卡哇裝飾層 - 放在背景不擋字 */
+        body::before {
+            content: "";
+            position: fixed;
+            bottom: 80px;
+            left: 10px;
+            width: 80px;
+            height: 80px;
+            background: url('https://i.imgur.com/vHqB3qQ.png') no-repeat center/contain; /* 請替換為吉伊卡哇透明去背圖 */
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        .app-card { 
+            background: rgba(255, 255, 255, 0.92); 
+            backdrop-filter: blur(8px);
+            border-radius: 12px; 
+            border: 1px solid #E2D5B5; 
+            box-shadow: 4px 4px 12px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+            position: relative; 
+        }
+        
+        /* 側邊裝飾 */
+        .app-card::before { 
+            content: "♥"; position: absolute; top: 10px; left: -8px; 
+            color: var(--zhusha-red); font-size: 12px;
+        }
+
+        .nav-fixed { 
+            position: fixed; bottom: 0; width: 100%; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px); 
+            border-top: 2px solid var(--mo-black); 
+            z-index: 100; 
+            padding-bottom: env(safe-area-inset-bottom); 
+        }
+
+        .recomm-badge { 
+            font-size: 10px; border: 1.5px solid var(--zhusha-red); color: var(--zhusha-red); 
+            padding: 1px 6px; border-radius: 4px; margin-right: 4px; font-weight: bold;
+            background: rgba(178, 34, 34, 0.05);
+        }
+
+        .spot-link { 
+            display: inline-flex; align-items: center; background: #FFF; 
+            border: 1px solid #E2D5B5; padding: 4px 10px; border-radius: 8px; 
+            margin: 2px; font-size: 11px; color: #444; font-weight: 600;
+            box-shadow: 1px 1px 0px #E2D5B5;
+        }
+
+        textarea { 
+            background: rgba(242, 240, 230, 0.8); border: 1px dashed #d1cfc1; 
+            outline: none; width: 100%; border-radius: 8px; padding: 12px; 
+            font-size: 13px; margin-top: 10px; color: #555; -webkit-user-select: text; 
+        }
+
         .currency-active { background: var(--mo-black); color: white; border-color: var(--mo-black); }
+        
+        /* 吉伊卡哇風格配色 */
+        .chiikawa-pink { color: #FFB7C5; }
+        .chiikawa-blue { color: #A0D8EF; }
     </style>
 </head>
 <body class="pb-32">
 
-    <header class="p-6 flex justify-between items-center border-b-2 border-black sticky top-0 bg-[#F9F4E8] z-50">
+    <header class="p-5 flex justify-between items-center border-b-2 border-black sticky top-0 bg-white/90 backdrop-blur-md z-50">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-[#B22222] flex items-center justify-center text-white font-serif text-xl border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">滬</div>
+            <div class="w-12 h-12 bg-[#B22222] flex items-center justify-center text-white rounded-full border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] relative">
+                <i class="fas fa-horse"></i>
+                <div class="absolute -top-1 -left-1 w-4 h-4 bg-white border-2 border-black rounded-full"></div>
+                <div class="absolute -top-1 -right-1 w-4 h-4 bg-white border-2 border-black rounded-full"></div>
+            </div>
             <div>
-                <h1 class="text-xl font-bold tracking-widest">上海考試手冊</h1>
-                <p class="text-[10px] opacity-60 uppercase font-bold tracking-tighter">V10 Dual Currency</p>
+                <h1 class="text-xl font-black tracking-widest text-gray-900 flex items-center">
+                    上海行程 <span class="ml-2 text-xs bg-pink-100 px-2 py-0.5 rounded-full text-pink-500">わッ！</span>
+                </h1>
+                <p class="text-[9px] opacity-60 uppercase font-bold tracking-widest italic">Success & Kawaii 2026</p>
             </div>
         </div>
-        <button onclick="openModal()" class="text-2xl hover:text-[#B22222]"><i class="fas fa-plus-square"></i></button>
+        <div class="flex gap-4">
+             <i class="fas fa-paw chiikawa-pink text-xl"></i>
+             <button onclick="openModal()" class="text-2xl text-gray-800"><i class="fas fa-plus-circle"></i></button>
+        </div>
     </header>
 
     <main class="p-5" id="main-container"></main>
 
     <section id="budget-section" class="p-5 hidden">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg font-bold italic">〈 盤纏帳本 〉</h2>
-            <div class="text-[10px] font-bold text-red-700 underline">基準 1 : 4.5</div>
+            <h2 class="text-lg font-bold italic border-b-2 border-red-700">〈 盤纏帳本 〉</h2>
+            <div class="text-[10px] font-bold text-gray-500 bg-white px-2 py-1 border rounded-full">1 : 4.5 匯率</div>
         </div>
-        <div class="app-card p-4 bg-[#FFFEFA]">
+        
+        <div class="app-card p-5 bg-white shadow-xl">
             <div class="grid grid-cols-2 gap-3 mb-4">
-                <input id="exp-name" type="text" placeholder="項目內容" class="col-span-2 p-3 border-b-2 border-gray-100 outline-none text-sm bg-transparent">
-                
-                <div class="flex items-center gap-2 bg-gray-50 p-1 rounded col-span-2">
-                    <input id="exp-amount" type="number" placeholder="輸入金額" class="flex-grow p-2 bg-transparent outline-none text-sm">
-                    <button onclick="setCurrency('RMB')" id="cur-RMB" class="currency-btn currency-active">RMB ¥</button>
-                    <button onclick="setCurrency('TWD')" id="cur-TWD" class="currency-btn">TWD $</button>
+                <input id="exp-name" type="text" placeholder="買了什麼好吃的？" class="col-span-2 p-3 border-b border-gray-100 outline-none text-sm bg-transparent">
+                <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-xl col-span-2 border">
+                    <input id="exp-amount" type="number" placeholder="金額" class="flex-grow p-2 bg-transparent outline-none text-sm font-mono">
+                    <button onclick="setCurrency('RMB')" id="cur-RMB" class="px-3 py-1 rounded-lg text-[10px] border transition-all currency-active">RMB ¥</button>
+                    <button onclick="setCurrency('TWD')" id="cur-TWD" class="px-3 py-1 rounded-lg text-[10px] border transition-all">TWD $</button>
                 </div>
-
-                <select id="exp-cat" class="col-span-2 p-3 bg-gray-50 outline-none text-sm rounded font-bold">
+                <select id="exp-cat" class="col-span-2 p-3 bg-gray-50 outline-none text-sm rounded-xl border font-bold">
                     <option value="用餐">用餐 🍜</option><option value="交通">交通 🚇</option>
                     <option value="住宿">住宿 🏨</option><option value="門票">門票 🎟️</option>
                     <option value="購物">購物 🛍️</option>
                 </select>
-                <button onclick="addExpense()" class="col-span-2 btn-primary py-3 font-bold shadow-md active:scale-95 transition-all">入帳</button>
+                <button onclick="addExpense()" class="col-span-2 bg-black text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all">
+                    入帳！(ｏ'∀')ｂ
+                </button>
             </div>
             
             <div id="expense-list" class="space-y-1 mt-6"></div>
             
-            <div class="mt-8 pt-6 border-t-2 border-black">
-                <div id="cat-summary" class="grid grid-cols-2 gap-2 mb-6 text-center"></div>
-                <div class="flex flex-col items-end">
-                    <div id="total-rmb" class="text-xl font-bold text-red-800 tracking-tighter">¥ 0.00</div>
-                    <div id="total-twd" class="text-sm font-bold text-gray-600 tracking-tighter">≈ NT$ 0</div>
-                </div>
+            <div class="mt-8 pt-6 border-t-2 border-black flex flex-col items-end">
+                <div id="total-rmb" class="text-2xl font-black text-red-800 tracking-tighter">¥ 0.00</div>
+                <div id="total-twd" class="text-sm font-bold text-gray-400 italic">≈ NT$ 0</div>
             </div>
         </div>
     </section>
 
-    <div id="modal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-8">
-        <div class="bg-[#F9F4E8] border-4 border-black p-6 w-full max-w-sm relative">
-            <h3 class="font-bold text-center mb-6 border-b border-black pb-2 italic text-lg">新增行程</h3>
-            <select id="new-day" class="w-full p-3 mb-4 border border-black outline-none bg-white font-bold"><option value="07/04">07/04</option><option value="07/05">07/05</option><option value="07/06">07/06</option><option value="07/07">07/07</option><option value="07/08">07/08</option></select>
-            <input id="new-title" type="text" placeholder="地點名稱" class="w-full p-3 mb-4 border border-black outline-none bg-white">
-            <select id="new-type" class="w-full p-3 mb-6 border border-black outline-none bg-white font-bold"><option value="spot">景點 📍</option><option value="food">用餐 🍜</option><option value="transport">交通 🚇</option><option value="hotel">住宿 🏨</option><option value="exam">考試 ✍️</option></select>
+    <div id="modal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-8 backdrop-blur-sm">
+        <div class="bg-[#F9F4E8] border-2 border-black p-6 w-full max-w-sm rounded-3xl relative">
+            <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-white px-4 py-1 border-2 border-black rounded-full font-bold">要增加行程嗎？</div>
+            <select id="new-day" class="w-full p-3 mt-4 mb-4 border border-black outline-none bg-white rounded-xl font-bold">
+                <option value="07/04">07/04 (五)</option><option value="07/05">07/05 (六)</option>
+                <option value="07/06">07/06 (日)</option><option value="07/07">07/07 (一)</option>
+                <option value="07/08">07/08 (二)</option>
+            </select>
+            <input id="new-title" type="text" placeholder="地點名稱" class="w-full p-3 mb-4 border border-black outline-none bg-white rounded-xl">
+            <select id="new-type" class="w-full p-3 mb-8 border border-black outline-none bg-white rounded-xl font-bold">
+                <option value="spot">景點 📍</option><option value="food">用餐 🍜</option>
+                <option value="transport">交通 🚇</option><option value="hotel">住宿 🏨</option>
+                <option value="exam">考試 ✍️</option>
+            </select>
             <div class="flex gap-4">
-                <button onclick="closeModal()" class="flex-1 py-3 border-2 border-black font-bold">取消</button>
-                <button onclick="addNewSchedule()" class="flex-1 py-3 bg-black text-white font-bold">確認</button>
+                <button onclick="closeModal()" class="flex-1 py-3 border border-black font-bold text-gray-400 rounded-xl">取消</button>
+                <button onclick="addNewSchedule()" class="flex-1 py-3 bg-red-800 text-white font-bold rounded-xl">確認！</button>
             </div>
         </div>
     </div>
 
-    <nav class="nav-fixed flex justify-around p-4 text-black font-bold">
-        <button onclick="showTab('schedule')" id="btn-sch" class="flex flex-col items-center text-[#B22222]"><i class="fas fa-scroll text-xl mb-1"></i><span class="text-[10px]">行程</span></button>
-        <button onclick="showTab('budget')" id="btn-bud" class="flex flex-col items-center opacity-40"><i class="fas fa-coins text-xl mb-1"></i><span class="text-[10px]">盤纏</span></button>
+    <nav class="nav-fixed flex justify-around p-4 shadow-2xl">
+        <button onclick="showTab('schedule')" id="btn-sch" class="flex flex-col items-center text-[#B22222]">
+            <i class="fas fa-scroll text-2xl mb-1"></i><span class="text-[10px] font-bold uppercase">Schedule</span>
+        </button>
+        <button onclick="showTab('budget')" id="btn-bud" class="flex flex-col items-center opacity-30">
+            <i class="fas fa-wallet text-2xl mb-1"></i><span class="text-[10px] font-bold uppercase">Budget</span>
+        </button>
     </nav>
 
     <script>
@@ -97,26 +180,28 @@
         let selectedCurrency = 'RMB';
         const CATEGORY_ICONS = { food: '🍜', exam: '✍️', spot: '📍', transport: '🚇', hotel: '🏨' };
         
-        const RECOMMENDATIONS = {
-            "虹橋市區": { restaurants: ["哈靈麵館", "大壺春生煎", "老盛昌湯包"], spots: ["武康大樓", "安福路", "徐家匯天主堂"], souvenirs: ["大白兔奶糖", "蝴蝶酥", "上海老香膏"] },
-            "朱家角古鎮": { restaurants: ["阿婆粽", "茂記醬園", "井亭大肉"], spots: ["放生橋", "課植園", "圓津禪院"], souvenirs: ["紮肉", "芡實糕", "朱家角手工扇"] },
-            "外灘靜安": { restaurants: ["蟹叁寳", "佳家湯包", "沪西老弄堂"], spots: ["四行倉庫", "朵雲書院", "南京路步行街"], souvenirs: ["沈大成糕點", "三陽南貨", "第一食品特產"] }
+        const DB = {
+            "機場虹橋": { restaurants: ["哈靈豬肝麵", "老盛昌湯包", "大壺春生煎"], spots: ["徐家匯書院", "上海動物園", "程十髮美術館"], souvenirs: ["大白兔奶糖", "蝴蝶酥", "上海老香膏"] },
+            "朱家角古鎮": { restaurants: ["阿婆角粽", "茂記醬園", "井亭大肉"], spots: ["放生橋", "課植園", "大清郵局"], souvenirs: ["古鎮紮肉", "芡實糕", "手工紙扇"] },
+            "四行靜安": { restaurants: ["王家沙點心", "丰裕生煎", "小楊生煎"], spots: ["靜安公園", "上海展覽中心", "張園"], souvenirs: ["沈大成糕點", "三陽南貨", "功德林素食"] },
+            "外灘豫園": { restaurants: ["蟹叁寳", "南翔饅頭店", "滬西老弄堂"], spots: ["十六鋪碼頭", "上海中心52層", "乍浦路橋"], souvenirs: ["女人街雪花膏", "真絲絲巾", "海派剪紙"] }
         };
 
         function getRecomm(title) {
-            if(title.includes("朱家角")) return RECOMMENDATIONS["朱家角古鎮"];
-            if(title.includes("外灘") || title.includes("靜安") || title.includes("四行") || title.includes("南京路")) return RECOMMENDATIONS["外灘靜安"];
-            return RECOMMENDATIONS["虹橋市區"];
+            if(title.includes("朱家角")) return DB["朱家角古鎮"];
+            if(title.includes("四行") || title.includes("靜安")) return DB["四行靜安"];
+            if(title.includes("外灘") || title.includes("豫園") || title.includes("朵雲")) return DB["外灘豫園"];
+            return DB["機場虹橋"];
         }
 
-        let schedules = JSON.parse(localStorage.getItem('sh_v10_sch')) || {
+        let schedules = JSON.parse(localStorage.getItem('sh_v13_sch')) || {
             "07/04": [{id:1, title:"虹橋機場 / 凱悅嘉寓", type:"hotel"}],
-            "07/05": [{id:2, title:"上海國家考試", type:"exam"}, {id:3, title:"朱家角古鎮巡禮", type:"spot"}],
-            "07/06": [{id:4, title:"四行倉庫紀念館", type:"spot"}],
+            "07/05": [{id:2, title:"上海國家考試", type:"exam"}, {id:3, title:"朱家角古鎮之旅", type:"spot"}],
+            "07/06": [{id:4, title:"四行倉庫 / 靜安寺", type:"spot"}],
             "07/07": [{id:5, title:"外灘 / 朵雲書院", type:"spot"}],
-            "07/08": [{id:6, title:"靜安寺祈福 / 返台", type:"transport"}]
+            "07/08": [{id:6, title:"返台行程", type:"transport"}]
         };
-        let expenses = JSON.parse(localStorage.getItem('sh_v10_exp')) || [];
+        let expenses = JSON.parse(localStorage.getItem('sh_v13_exp')) || [];
 
         function renderSchedules() {
             const container = document.getElementById('main-container');
@@ -124,32 +209,32 @@
             Object.keys(schedules).forEach(day => {
                 const section = document.createElement('section');
                 section.className = "mb-10";
-                section.innerHTML = `<h2 class="text-sm font-bold italic mb-4">〔 ${day} 〕</h2><div id="list-${day.replace('/','-')}" class="sortable-list"></div>`;
+                section.innerHTML = `<h2 class="text-xs font-black italic mb-5 flex items-center text-gray-500"><i class="fas fa-star-of-david mr-2 chiikawa-pink"></i>〔 ${day} 〕</h2><div id="list-${day.replace('/','-')}" class="sortable-list"></div>`;
                 container.appendChild(section);
                 schedules[day].forEach(item => {
                     const rec = getRecomm(item.title);
-                    const spotLinks = rec.spots.map(s => `<button onclick="goAmap('${s}')" class="spot-link"><i class="fas fa-location-dot mr-1 text-[9px] opacity-50"></i>${s}</button>`).join('');
+                    const spotLinks = rec.spots.map(s => `<button onclick="goAmap('${s}')" class="spot-link"><i class="fas fa-map-marker-alt mr-1 text-[9px] text-red-800 opacity-50"></i>${s}</button>`).join('');
                     const card = document.createElement('div');
-                    card.className = "app-card p-4";
+                    card.className = "app-card p-5";
                     card.dataset.id = item.id; card.dataset.type = item.type;
                     card.innerHTML = `<div class="flex items-start gap-3">
-                        <div class="drag-handle mt-1"><i class="fas fa-grip-vertical opacity-20"></i></div>
+                        <div class="drag-handle mt-1 opacity-20"><i class="fas fa-ellipsis-v"></i></div>
                         <div class="flex-grow">
-                            <div class="flex justify-between items-start">
-                                <div class="font-bold text-lg mb-2">${CATEGORY_ICONS[item.type]} ${item.title}</div>
-                                <button onclick="goAmap('${item.title}')" class="text-red-800"><i class="fas fa-map-marked-alt text-xl"></i></button>
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="font-black text-xl text-gray-800">${CATEGORY_ICONS[item.type]} ${item.title}</div>
+                                <button onclick="goAmap('${item.title}')" class="text-red-800 text-xl"><i class="fas fa-compass"></i></button>
                             </div>
-                            <div class="text-[11px] leading-6 mb-3">
-                                <div class="flex"><span class="recomm-badge">饌</span> <span class="text-gray-500">${rec.restaurants.join('・')}</span></div>
-                                <div class="flex items-start mt-1"><span class="recomm-badge" style="border-color:#15803d; color:#15803d;">景</span> <div class="flex flex-wrap">${spotLinks}</div></div>
-                                <div class="flex mt-1"><span class="recomm-badge" style="border-color:#555; color:#555;">物</span> <span class="text-gray-500">${rec.souvenirs.join('・')}</span></div>
+                            <div class="text-[11px] leading-6 space-y-1">
+                                <div class="flex"><span class="recomm-badge">饌</span> <span class="text-gray-500 font-medium">${rec.restaurants.join('・')}</span></div>
+                                <div class="flex items-start"><span class="recomm-badge" style="border-color:#15803d; color:#15803d;">景</span> <div class="flex flex-wrap">${spotLinks}</div></div>
+                                <div class="flex"><span class="recomm-badge" style="border-color:#555; color:#555;">物</span> <span class="text-gray-500 font-medium">${rec.souvenirs.join('・')}</span></div>
                             </div>
                             <textarea onblur="saveAllData()">${item.note || ''}</textarea>
                         </div>
                     </div>`;
                     section.querySelector('.sortable-list').appendChild(card);
                 });
-                new Sortable(section.querySelector('.sortable-list'), { group:'shared', animation:200, handle:'.drag-handle', onEnd: saveAllData });
+                new Sortable(section.querySelector('.sortable-list'), { group:'shared', animation:300, handle:'.drag-handle', onEnd: saveAllData });
             });
         }
 
@@ -159,52 +244,46 @@
                 const day = list.id.replace('list-','').replace('-','/');
                 newSch[day] = [];
                 list.querySelectorAll('.app-card').forEach(card => {
-                    newSch[day].push({ id:card.dataset.id, title:card.querySelector('.font-bold').innerText.split(' ')[1], type:card.dataset.type, note:card.querySelector('textarea').value });
+                    newSch[day].push({ id:card.dataset.id, title:card.querySelector('.font-black').innerText.substring(3).trim(), type:card.dataset.type, note:card.querySelector('textarea').value });
                 });
             });
-            schedules = newSch; localStorage.setItem('sh_v10_sch', JSON.stringify(schedules));
+            schedules = newSch; localStorage.setItem('sh_v13_sch', JSON.stringify(schedules));
         }
 
-        // --- 記帳功能核心更新 (雙幣別) ---
-        function setCurrency(cur) {
-            selectedCurrency = cur;
-            document.getElementById('cur-RMB').classList.toggle('currency-active', cur==='RMB');
-            document.getElementById('cur-TWD').classList.toggle('currency-active', cur==='TWD');
+        function setCurrency(cur) { 
+            selectedCurrency = cur; 
+            document.getElementById('cur-RMB').classList.toggle('currency-active', cur==='RMB'); 
+            document.getElementById('cur-TWD').classList.toggle('currency-active', cur==='TWD'); 
         }
 
         function renderExpenses() {
-            const list = document.getElementById('expense-list'), summaryEl = document.getElementById('cat-summary');
-            let rmbTotal = 0, catSum = { "用餐":0, "交通":0, "住宿":0, "門票":0, "購物":0 };
+            const list = document.getElementById('expense-list');
+            let rmbTotal = 0;
             list.innerHTML = '';
-            expenses.slice().reverse().forEach((ex, originalIndex) => {
-                const actualIndex = expenses.length - 1 - originalIndex;
-                let rmb = parseFloat(ex.amount);
-                rmbTotal += rmb; catSum[ex.cat] += rmb;
-                list.innerHTML += `<div class="flex justify-between items-center py-3 border-b border-gray-100 bg-white">
-                    <div class="flex items-center">
-                        <button onclick="deleteExpense(${actualIndex})" class="del-btn mr-1"><i class="fas fa-trash-can"></i></button>
-                        <div class="text-xs"><div class="font-bold text-red-700">${ex.cat}</div><div>${ex.name}</div></div>
-                    </div>
-                    <div class="text-right font-mono"><div class="font-bold">¥${rmb.toFixed(2)}</div><div class="text-[9px] text-gray-400">NT$${Math.round(rmb * RATE)}</div></div>
-                </div>`;
+            expenses.slice().reverse().forEach((ex, idx) => {
+                const actualIdx = expenses.length - 1 - idx;
+                let rmb = parseFloat(ex.amount); rmbTotal += rmb;
+                list.innerHTML += `<div class="flex justify-between items-center py-4 border-b border-gray-100">
+                    <div class="flex items-center"><button onclick="deleteExpense(${actualIdx})" class="text-gray-200 px-2 mr-2"><i class="fas fa-times-circle"></i></button>
+                    <div class="text-xs font-bold text-gray-700"><div class="text-red-800 text-[10px] uppercase">${ex.cat}</div>${ex.name}</div></div>
+                    <div class="text-right"><div class="font-black text-gray-900">¥${rmb.toFixed(2)}</div><div class="text-[10px] text-gray-400">NT$${Math.round(rmb * RATE)}</div></div></div>`;
             });
-            summaryEl.innerHTML = Object.keys(catSum).map(c => `<div class="p-2 border border-dashed border-gray-300 rounded"><div class="text-[9px] text-gray-400 font-bold">${c}</div><div class="text-[11px] font-bold text-red-900">¥${catSum[c].toFixed(1)}</div></div>`).join('');
             document.getElementById('total-rmb').innerText = `¥ ${rmbTotal.toFixed(2)}`;
             document.getElementById('total-twd').innerText = `≈ NT$ ${Math.round(rmbTotal * RATE).toLocaleString()}`;
-            localStorage.setItem('sh_v10_exp', JSON.stringify(expenses));
+            localStorage.setItem('sh_v13_exp', JSON.stringify(expenses));
         }
 
         function addExpense() {
             const n = document.getElementById('exp-name'), a = document.getElementById('exp-amount'), c = document.getElementById('exp-cat');
             if(n.value && a.value) {
-                let amountInRMB = parseFloat(a.value);
-                if(selectedCurrency === 'TWD') amountInRMB = amountInRMB / RATE;
-                expenses.push({ name: n.value, amount: amountInRMB.toFixed(2), cat: c.value });
+                let rmb = parseFloat(a.value); if(selectedCurrency === 'TWD') rmb = rmb / RATE;
+                expenses.push({ name: n.value, amount: rmb.toFixed(2), cat: c.value });
                 n.value = ''; a.value = ''; renderExpenses();
             }
         }
 
-        function deleteExpense(index) { if(confirm('確定要刪除這筆帳目嗎？')) { expenses.splice(index, 1); renderExpenses(); } }
+        function deleteExpense(i) { if(confirm('要刪除這筆紀錄嗎？')) { expenses.splice(i, 1); renderExpenses(); } }
+
         function showTab(t) {
             document.getElementById('main-container').classList.toggle('hidden', t==='budget');
             document.getElementById('budget-section').classList.toggle('hidden', t==='schedule');
@@ -212,6 +291,7 @@
             document.getElementById('btn-bud').style.opacity = t==='budget' ? '1' : '0.4';
             if(t==='budget') renderExpenses();
         }
+
         function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
         function openModal() { document.getElementById('modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('modal').classList.add('hidden'); }
