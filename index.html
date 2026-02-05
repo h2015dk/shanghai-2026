@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>上海助手 V26 - 標題強化</title>
+    <title>上海助手 V27 - 雙幣記帳</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --zhusha-red: #B22222; --paper-white: #F4F1E1; }
+        :root { --zhusha-red: #B22222; --paper-white: #F4F1E1; --mo-black: #2C2C2C; }
         body { 
             font-family: "PingFang TC", sans-serif; 
             background-color: var(--paper-white); 
@@ -17,26 +17,18 @@
         }
         .responsive-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background: rgba(244, 241, 225, 0.85); padding-bottom: 100px; position: relative; }
         
-        /* 強化後的日期標題樣式 */
-        .day-header {
-            font-size: 24px; /* 字體放大 */
-            font-weight: 900;
-            color: var(--mo-black);
-            margin-top: 40px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 3px solid var(--zhusha-red);
-            padding-bottom: 4px;
-            letter-spacing: 2px;
-        }
+        /* 日期標題樣式 */
+        .day-header { font-size: 24px; font-weight: 900; color: var(--mo-black); margin-top: 40px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid var(--zhusha-red); padding-bottom: 4px; letter-spacing: 2px; }
 
         .app-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #D4C5A2; margin-bottom: 12px; border-radius: 8px; overflow: hidden; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }
         .drag-handle { cursor: grab; color: #ccc; padding: 10px; }
         .nav-fixed { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px; z-index: 100; }
-        .time-tag { font-size: 11px; color: #B22222; font-weight: bold; background: #FFF0F0; padding: 2px 6px; border-radius: 4px; }
         textarea { width: 100%; font-size: 12px; border: 1px dashed #D4C5A2; background: #FDFCF8; padding: 8px; border-radius: 4px; outline: none; margin-top: 8px; color: #666; }
+        
+        /* 幣別切換按鈕 */
+        .currency-btn { padding: 4px 12px; font-size: 12px; border-radius: 4px; border: 1px solid #ddd; transition: 0.2s; }
+        .currency-btn.active { background: var(--mo-black); color: white; border-color: var(--mo-black); }
+        
         .hidden { display: none; }
     </style>
 </head>
@@ -44,34 +36,39 @@
     <div class="responsive-container">
         <div id="schedule-tab">
             <header class="p-6 bg-[#B22222] text-white sticky top-0 z-50 flex justify-between items-center shadow-lg">
-                <div>
-                    <h1 class="text-xl font-bold">上海行程導航</h1>
-                    <p class="text-[10px] opacity-80 uppercase tracking-widest">Enhanced UI V26</p>
-                </div>
-                <button onclick="openModal()" class="w-10 h-10 bg-white text-red-800 rounded-full shadow-md flex items-center justify-center active:scale-90">
-                    <i class="fas fa-plus"></i>
-                </button>
+                <div><h1 class="text-xl font-bold">上海行程導航</h1><p class="text-[10px] opacity-80 uppercase tracking-widest">Multi-Currency V27</p></div>
+                <button onclick="openModal()" class="w-10 h-10 bg-white text-red-800 rounded-full shadow-md flex items-center justify-center active:scale-90"><i class="fas fa-plus"></i></button>
             </header>
             <main class="p-4" id="main-content"></main>
         </div>
 
         <div id="budget-tab" class="hidden p-6">
-            <h2 class="text-xl font-bold mb-4 border-b-2 border-black pb-2">💰 盤纏總覽</h2>
+            <h2 class="text-xl font-bold mb-4 border-b-2 border-black pb-2">💰 盤纏總覽 (1 RMB : 4.5 TWD)</h2>
             <div class="bg-white p-6 rounded-xl border-2 border-black shadow-lg mb-6 text-center">
-                <p id="total-display" class="text-4xl font-black text-red-700">¥ 0.00</p>
+                <p id="total-display-rmb" class="text-3xl font-black text-red-700">¥ 0.00</p>
+                <p id="total-display-twd" class="text-sm font-bold text-gray-400 mt-1">≈ NT$ 0</p>
             </div>
-            <div class="bg-white p-4 rounded-lg border mb-6">
-                <input id="exp-name" type="text" placeholder="品項" class="w-full border p-3 rounded-lg mb-2 text-sm">
-                <div class="flex gap-2">
-                    <input id="exp-amount" type="number" placeholder="¥" class="flex-1 border p-3 rounded-lg text-sm">
-                    <select id="exp-cat" class="flex-1 border p-3 rounded-lg text-sm font-bold">
-                        <option value="用餐">用餐 🍜</option><option value="交通">交通 🚇</option>
-                        <option value="住宿">住宿 🏨</option><option value="門票">門票 🎟️</option>
-                        <option value="購物">購物 🛍️</option>
-                    </select>
+
+            <div class="bg-white p-4 rounded-lg border mb-6 shadow-sm">
+                <input id="exp-name" type="text" placeholder="品項名稱" class="w-full border p-3 rounded-lg mb-3 text-sm">
+                <div class="flex gap-2 items-center mb-3">
+                    <input id="exp-amount" type="number" placeholder="金額" class="flex-grow border p-3 rounded-lg text-sm">
+                    <div class="flex bg-gray-100 p-1 rounded-lg">
+                        <button id="btn-rmb" onclick="setCurrency('RMB')" class="currency-btn active">RMB</button>
+                        <button id="btn-twd" onclick="setCurrency('TWD')" class="currency-btn">TWD</button>
+                    </div>
                 </div>
-                <button onclick="addExpense()" class="w-full bg-black text-white py-3 rounded-lg font-bold mt-2">新增支出</button>
+                <select id="exp-cat" class="w-full border p-3 rounded-lg text-sm font-bold mb-3">
+                    <option value="用餐">用餐 🍜</option><option value="交通">交通 🚇</option>
+                    <option value="住宿">住宿 🏨</option><option value="門票">門票 🎟️</option>
+                    <option value="購物">購物 🛍️</option>
+                </select>
+                <button onclick="addExpense()" class="w-full bg-black text-white py-4 rounded-lg font-bold">新增記帳項目</button>
             </div>
+
+            <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Category Totals (TWD 折合)</h3>
+            <div id="cat-summary" class="grid grid-cols-2 gap-2 mb-6"></div>
+            
             <div id="expense-list" class="space-y-2"></div>
         </div>
 
@@ -99,10 +96,10 @@
         </div>
 
         <nav class="nav-fixed">
-            <button onclick="showTab('schedule')" id="btn-sch" class="text-red-800 flex flex-col items-center">
+            <button onclick="showTab('schedule')" id="nav-sch" class="text-red-800 flex flex-col items-center">
                 <i class="fas fa-scroll text-xl"></i><span class="text-[10px] font-bold">行程導航</span>
             </button>
-            <button onclick="showTab('budget')" id="btn-bud" class="text-gray-400 flex flex-col items-center">
+            <button onclick="showTab('budget')" id="nav-bud" class="text-gray-400 flex flex-col items-center">
                 <i class="fas fa-wallet text-xl"></i><span class="text-[10px] font-bold">盤纏記帳</span>
             </button>
         </nav>
@@ -110,8 +107,10 @@
 
     <script>
         const TYPE_ICONS = { station: '🚇', hotel: '🏨', food: '🍜', spot: '📍', exam: '✍️' };
-        
-        let defaultSchedules = {
+        const EXCHANGE_RATE = 4.5;
+        let currentCurrency = 'RMB';
+
+        let schedules = JSON.parse(localStorage.getItem('sh_v27_sch')) || {
             "07/04": [
                 { id: 1, title: "上海虹橋站", type: "station", note: "14:15抵達" },
                 { id: 2, title: "上海虹橋商務區凱悅嘉寓飯店", type: "hotel", note: "" }
@@ -125,117 +124,127 @@
             ],
             "07/06": [
                 { id: 8, title: "靜安寺車站", type: "station", note: "" },
-                { id: 9, title: "滬西老弄堂麵館", type: "food", time: "10:00-15:00", note: "" },
+                { id: 9, title: "滬西老弄堂麵館", type: "food", note: "" },
                 { id: 10, title: "安福路", type: "spot", note: "" },
                 { id: 11, title: "田子坊", type: "spot", note: "" },
-                { id: 12, title: "上海城隍廟", type: "spot", time: "08:30-16:30", note: "" },
+                { id: 12, title: "上海城隍廟", type: "spot", note: "" },
                 { id: 13, title: "豫園", type: "spot", note: "" },
-                { id: 14, title: "小楊生煎", type: "food", note: "宵夜" },
+                { id: 14, title: "小楊生煎", type: "food", note: "" },
                 { id: 15, title: "幾木筱築飯店（上海靜安寺店）", type: "hotel", note: "" }
             ],
             "07/07": [
                 { id: 16, title: "星巴克臻選(上海烘焙工坊)", type: "food", note: "" },
-                { id: 17, title: "上海四行倉庫抗戰紀念館", type: "spot", note: "" },
+                { id: 17, title: "上海四行倉庫紀念館", type: "spot", note: "" },
                 { id: 18, title: "南京路步行街", type: "spot", note: "" },
-                { id: 19, title: "蟹叁寳·蟹家宴·蟹黃撈飯", type: "food", note: "" },
-                { id: 20, title: "外灘", type: "spot", note: "" },
-                { id: 21, title: "朵雲書院·旗艦店", type: "spot", note: "" },
-                { id: 22, title: "萊萊湯包", type: "food", note: "宵夜" }
+                { id: 19, title: "蟹叁寳·蟹家宴", type: "food", note: "" },
+                { id: 20, title: "外灘 / 朵雲書院", type: "spot", note: "" },
+                { id: 21, title: "萊萊湯包", type: "food", note: "" }
             ],
             "07/08": [
-                { id: 23, title: "靜安寺車站", type: "station", note: "" },
-                { id: 24, title: "奶奶的味道(膠州路店)", type: "food", note: "" },
-                { id: 25, title: "上海虹橋機場", type: "station", note: "返程" }
+                { id: 22, title: "靜安寺車站", type: "station", note: "" },
+                { id: 23, title: "奶奶的味道(膠州路店)", type: "food", note: "" },
+                { id: 24, title: "上海虹橋機場", type: "station", note: "返程" }
             ]
         };
+        let expenses = JSON.parse(localStorage.getItem('sh_v27_exp')) || [];
 
-        let schedules = JSON.parse(localStorage.getItem('sh_v26_sch')) || defaultSchedules;
-        let expenses = JSON.parse(localStorage.getItem('sh_v26_exp')) || [];
-
-        function render() {
+        function renderSchedules() {
             const main = document.getElementById('main-content');
             main.innerHTML = '';
             Object.keys(schedules).forEach(day => {
-                // 這裡套用了強化後的樣式
-                const dayHeader = document.createElement('div');
-                dayHeader.className = "day-header";
-                dayHeader.innerHTML = `<span>📜</span> <span>${day}</span>`;
-                main.appendChild(dayHeader);
+                const header = document.createElement('div');
+                header.className = "day-header";
+                header.innerHTML = `<span>📜</span><span>${day}</span>`;
+                main.appendChild(header);
 
-                const listWrap = document.createElement('div');
-                listWrap.id = `day-${day.replace('/','-')}`;
-                main.appendChild(listWrap);
+                const wrap = document.createElement('div');
+                wrap.id = `day-${day.replace('/','-')}`;
+                main.appendChild(wrap);
 
                 schedules[day].forEach(item => {
                     const card = document.createElement('div');
                     card.className = "app-card p-4 flex gap-2 items-start relative";
                     card.dataset.id = item.id;
                     card.innerHTML = `
-                        <div class="drag-handle mt-1"><i class="fas fa-grip-vertical"></i></div>
+                        <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
                         <div class="flex-grow">
                             <div class="flex justify-between items-start mr-8">
-                                <div>
-                                    <h3 class="font-bold text-md">${TYPE_ICONS[item.type]} ${item.title}</h3>
-                                    ${item.time ? `<span class="time-tag">🕓 ${item.time}</span>` : ''}
-                                </div>
+                                <h3 class="font-bold text-md">${TYPE_ICONS[item.type]} ${item.title}</h3>
                                 <button onclick="goAmap('${item.title}')" class="text-red-800"><i class="fas fa-compass text-xl"></i></button>
                             </div>
-                            <button onclick="deleteSchedule('${day}', ${item.id})" class="absolute top-2 right-2 text-gray-200 hover:text-red-500 p-2"><i class="fas fa-times"></i></button>
-                            <textarea onblur="updateNote('${day}', ${item.id}, this.value)" placeholder="編輯備註...">${item.note || ''}</textarea>
-                        </div>
-                    `;
-                    listWrap.appendChild(card);
+                            <button onclick="deleteSchedule('${day}', ${item.id})" class="absolute top-2 right-2 text-gray-200 p-2"><i class="fas fa-times"></i></button>
+                            <textarea onblur="updateNote('${day}', ${item.id}, this.value)" placeholder="編輯說明...">${item.note || ''}</textarea>
+                        </div>`;
+                    wrap.appendChild(card);
                 });
-                new Sortable(listWrap, { animation: 150, handle: '.drag-handle', onEnd: () => saveOrder(day, listWrap) });
+                new Sortable(wrap, { animation: 150, handle: '.drag-handle', onEnd: () => saveOrder(day, wrap) });
             });
         }
 
-        function openModal() { document.getElementById('add-modal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('add-modal').classList.add('hidden'); }
-        function addNewSchedule() {
-            const d = document.getElementById('input-day').value, t = document.getElementById('input-type').value, title = document.getElementById('input-title').value;
-            if(!title) return;
-            schedules[d].push({ id: Date.now(), title, type: t, note: "" });
-            saveAll(); render(); closeModal();
+        function setCurrency(cur) {
+            currentCurrency = cur;
+            document.getElementById('btn-rmb').classList.toggle('active', cur === 'RMB');
+            document.getElementById('btn-twd').classList.toggle('active', cur === 'TWD');
         }
-        function deleteSchedule(day, id) {
-            if(confirm("刪除此行程？")) { schedules[day] = schedules[day].filter(i => i.id !== id); saveAll(); render(); }
-        }
-        function saveOrder(day, listWrap) {
-            const newOrderIds = Array.from(listWrap.children).map(card => parseInt(card.dataset.id));
-            schedules[day] = newOrderIds.map(id => schedules[day].find(item => item.id === id));
-            saveAll();
-        }
-        function updateNote(day, id, val) {
-            const item = schedules[day].find(i => i.id === id); if(item) item.note = val; saveAll();
-        }
-        function saveAll() { localStorage.setItem('sh_v26_sch', JSON.stringify(schedules)); }
-        function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
 
         function addExpense() {
             const n = document.getElementById('exp-name'), a = document.getElementById('exp-amount'), c = document.getElementById('exp-cat');
             if(n.value && a.value) {
-                expenses.push({ name: n.value, amount: parseFloat(a.value), cat: c.value });
+                let amountInRMB = parseFloat(a.value);
+                if(currentCurrency === 'TWD') amountInRMB = amountInRMB / EXCHANGE_RATE;
+                
+                expenses.push({ name: n.value, amount: amountInRMB, cat: c.value });
                 n.value = ''; a.value = ''; renderExpenses();
             }
         }
+
         function renderExpenses() {
-            const list = document.getElementById('expense-list'); let total = 0; list.innerHTML = '';
-            expenses.slice().reverse().forEach(ex => {
-                total += ex.amount;
-                list.innerHTML += `<div class="bg-white p-3 rounded-lg flex justify-between border-l-4 border-black text-sm"><span><b>${ex.cat}</b> ${ex.name}</span><span class="font-bold">¥${ex.amount}</span></div>`;
+            const list = document.getElementById('expense-list'), summary = document.getElementById('cat-summary');
+            let totalRMB = 0, catTotalRMB = { "用餐":0, "交通":0, "住宿":0, "門票":0, "購物":0 };
+            
+            list.innerHTML = '';
+            expenses.slice().reverse().forEach((ex, idx) => {
+                totalRMB += ex.amount; catTotalRMB[ex.cat] += ex.amount;
+                list.innerHTML += `<div class="bg-white p-3 rounded-lg flex justify-between border-l-4 border-black text-sm mb-2">
+                    <span><b>${ex.cat}</b> ${ex.name}</span>
+                    <div class="text-right">
+                        <div class="font-bold">¥${ex.amount.toFixed(1)}</div>
+                        <div class="text-[9px] text-gray-400">NT$${Math.round(ex.amount * EXCHANGE_RATE)}</div>
+                    </div>
+                </div>`;
             });
-            document.getElementById('total-display').innerText = `¥ ${total.toFixed(2)}`;
-            localStorage.setItem('sh_v26_exp', JSON.stringify(expenses));
+
+            summary.innerHTML = Object.keys(catTotalRMB).map(k => `
+                <div class="bg-white p-2 border rounded-lg text-center shadow-sm">
+                    <div class="text-[10px] text-gray-400 font-bold">${k}</div>
+                    <div class="text-xs font-black text-gray-800">NT$${Math.round(catTotalRMB[k] * EXCHANGE_RATE).toLocaleString()}</div>
+                </div>`).join('');
+
+            document.getElementById('total-display-rmb').innerText = `¥ ${totalRMB.toFixed(2)}`;
+            document.getElementById('total-display-twd').innerText = `≈ NT$ ${Math.round(totalRMB * EXCHANGE_RATE).toLocaleString()}`;
+            localStorage.setItem('sh_v27_exp', JSON.stringify(expenses));
         }
-        function showTab(tab) {
-            document.getElementById('schedule-tab').classList.toggle('hidden', tab === 'budget');
-            document.getElementById('budget-tab').classList.toggle('hidden', tab === 'schedule');
-            document.getElementById('btn-sch').style.color = tab === 'schedule' ? '#B22222' : '#ccc';
-            document.getElementById('btn-bud').style.color = tab === 'budget' ? '#B22222' : '#ccc';
-            if(tab === 'budget') renderExpenses();
+
+        // 核心邏輯 (排序、更新、彈窗)
+        function saveOrder(day, wrap) { schedules[day] = Array.from(wrap.children).map(c => schedules[day].find(i => i.id == c.dataset.id)); saveAll(); }
+        function updateNote(day, id, val) { schedules[day].find(i => i.id == id).note = val; saveAll(); }
+        function deleteSchedule(day, id) { if(confirm('刪除？')){ schedules[day] = schedules[day].filter(i => i.id != id); saveAll(); renderSchedules(); }}
+        function openModal() { document.getElementById('add-modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('add-modal').classList.add('hidden'); }
+        function addNewSchedule() {
+            const d = document.getElementById('input-day').value, t = document.getElementById('input-type').value, title = document.getElementById('input-title').value;
+            if(title) { schedules[d].push({ id: Date.now(), title, type: t, note: "" }); saveAll(); renderSchedules(); closeModal(); }
         }
-        window.onload = render;
+        function saveAll() { localStorage.setItem('sh_v27_sch', JSON.stringify(schedules)); }
+        function showTab(t) {
+            document.getElementById('schedule-tab').classList.toggle('hidden', t === 'budget');
+            document.getElementById('budget-tab').classList.toggle('hidden', t === 'schedule');
+            document.getElementById('nav-sch').style.color = t === 'schedule' ? '#B22222' : '#ccc';
+            document.getElementById('nav-bud').style.color = t === 'budget' ? '#B22222' : '#ccc';
+            if(t === 'budget') renderExpenses();
+        }
+        function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
+        window.onload = renderSchedules;
     </script>
 </body>
 </html>
