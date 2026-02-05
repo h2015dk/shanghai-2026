@@ -3,171 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>上海助手 V21 - 2026 行程導航</title>
+    <title>上海助手 V22 - 導航與拆分版</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --zhusha-red: #B22222; --mo-black: #2C2C2C; --paper-white: #F4F1E1; }
-        body { 
-            font-family: "PingFang TC", "STHeiti", serif; 
-            background-color: var(--paper-white); 
-            background-image: url('big-horse.jpg'); 
-            background-attachment: fixed; background-position: center; background-size: cover; background-repeat: no-repeat;
-            color: var(--mo-black); margin: 0; padding: 0;
-        }
-        .responsive-container {
-            max-width: 600px; margin: 0 auto; min-height: 100vh;
-            background: rgba(244, 241, 225, 0.75); position: relative; z-index: 1;
-        }
-        .app-card { 
-            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px);
-            border: 1px solid #D4C5A2; box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-            margin-bottom: 12px; border-radius: 8px; overflow: hidden;
-        }
-        .nav-fixed { 
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 600px; background: rgba(244, 241, 225, 0.98); 
-            border-top: 1px solid var(--mo-black); z-index: 100; padding-bottom: env(safe-area-inset-bottom); 
-        }
-        .recomm-badge { 
-            font-size: 10px; border: 1px solid var(--zhusha-red); color: var(--zhusha-red); 
-            padding: 1px 4px; border-radius: 2px; margin-right: 4px; font-weight: bold;
-        }
-        .spot-link { 
-            display: inline-flex; align-items: center; background: #fff; 
-            border: 1px solid #D4C5A2; padding: 2px 10px; border-radius: 4px; 
-            margin: 2px; font-size: 11px; color: #444; font-weight: bold;
-        }
-        textarea { 
-            background: rgba(0, 0, 0, 0.03); border: 1px dashed #D4C5A2; 
-            outline: none; width: 100%; padding: 8px; border-radius: 6px;
-            font-size: 12px; margin-top: 8px; color: #555;
-        }
+        :root { --zhusha-red: #B22222; --paper-white: #F4F1E1; }
+        body { font-family: "PingFang TC", sans-serif; background-color: var(--paper-white); margin: 0; padding-bottom: 80px; }
+        .app-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #D4C5A2; margin-bottom: 10px; border-radius: 8px; overflow: hidden; transition: 0.3s; }
+        .nav-fixed { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px; z-index: 100; }
+        .time-tag { font-size: 11px; color: #B22222; font-weight: bold; background: #FFF0F0; padding: 2px 6px; border-radius: 4px; }
+        .recomm-box { background: #F9F7F0; border: 1px dashed #D4C5A2; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 12px; }
+        .hidden { display: none; }
     </style>
 </head>
-<body class="pb-32">
-    <div class="responsive-container">
-        <header class="p-6 flex justify-between items-center border-b border-black sticky top-0 bg-[#F4F1E1]/95 backdrop-blur-md z-50">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-[#B22222] flex items-center justify-center text-white border border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    <i class="fas fa-horse"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tighter">上海考驗・行程助手</h1>
-                    <p class="text-[9px] opacity-60 uppercase tracking-widest">July 04 - July 08, 2026</p>
-                </div>
-            </div>
-            <button onclick="openModal()" class="w-10 h-10 flex items-center justify-center border border-black active:bg-black active:text-white">
-                <i class="fas fa-plus"></i>
-            </button>
+<body>
+    <div id="schedule-tab">
+        <header class="p-6 bg-[#B22222] text-white sticky top-0 z-50 shadow-md">
+            <h1 class="text-xl font-bold">上海行程 (07/04 - 07/08)</h1>
+            <p class="text-xs opacity-80">點擊箭頭開啟高德地圖導航</p>
         </header>
 
-        <main class="p-5" id="main-container"></main>
-
-        <nav class="nav-fixed flex justify-around p-4 shadow-sm">
-            <button onclick="showTab('schedule')" class="flex flex-col items-center text-[#B22222]">
-                <i class="fas fa-scroll text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">卷軸行程</span>
-            </button>
-            <button onclick="showTab('budget')" class="flex flex-col items-center opacity-30">
-                <i class="fas fa-wallet text-xl mb-1"></i><span class="text-[10px] font-bold uppercase">盤纏記帳</span>
-            </button>
-        </nav>
+        <main class="p-4" id="main-content"></main>
     </div>
 
+    <div id="budget-tab" class="hidden p-6">
+        <h2 class="text-2xl font-bold mb-4">💰 盤纏記帳</h2>
+        <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <p class="text-sm text-gray-500 mb-2">剩餘預算</p>
+            <p class="text-3xl font-black text-green-600">¥ 4,500.00</p>
+            <div class="mt-4 space-y-2">
+                <input type="number" placeholder="輸入金額" class="w-full border p-2 rounded">
+                <input type="text" placeholder="支出用途" class="w-full border p-2 rounded">
+                <button class="w-full bg-black text-white py-2 rounded">記錄一筆</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-fixed">
+        <button onclick="showTab('schedule')" id="btn-sch" class="text-red-800 flex flex-col items-center">
+            <i class="fas fa-scroll text-xl"></i><span class="text-[10px] font-bold">行程導航</span>
+        </button>
+        <button onclick="showTab('budget')" id="btn-bud" class="text-gray-400 flex flex-col items-center">
+            <i class="fas fa-wallet text-xl"></i><span class="text-[10px] font-bold">盤纏記帳</span>
+        </button>
+    </nav>
+
     <script>
-        const CATEGORY_ICONS = { food: '🍜', exam: '✍️', spot: '📍', transport: '🚇', hotel: '🏨' };
-        
-        // AI 推薦資料庫 (根據地點自動適配)
-        const DB = {
-            "朱家角": { restaurants: ["阿婆角粽", "茂記醬園", "井亭大肉"], spots: ["放生橋", "課植園", "大清郵局"] },
-            "豫園": { restaurants: ["南翔饅頭店", "上海老飯店", "松月樓素菜"], spots: ["九曲橋", "城隍廟", "文廟"] },
-            "靜安": { restaurants: ["王家沙點心", "丰裕生煎", "小楊生煎"], spots: ["靜安公園", "上海展覽中心", "張園"] }
-        };
-
-        function getRecomm(title, day) {
-            if (day === "07/04" || title.includes("考試")) return null;
-            if (title.includes("朱家角")) return DB["朱家角"];
-            if (title.includes("豫園") || title.includes("城隍廟")) return DB["豫園"];
-            if (title.includes("靜安") || title.includes("萊萊")) return DB["靜安"];
-            return null;
-        }
-
-        // 完整行程表資料 (07/04 - 07/08)
-        let schedules = {
+        const schedules = {
             "07/04": [
-                { id: 101, title: "上海虹橋站 (機場抵達)", type: "transport", amap: "上海虹桥站" },
-                { id: 102, title: "上海虹橋商務區凱悅嘉寓飯店 (入住)", type: "hotel", amap: "上海虹桥商务区凯悦嘉寓饭店" }
+                { title: "上海虹橋站", type: "station", note: "機場抵航" },
+                { title: "上海虹橋商務區凱悅嘉寓飯店", type: "hotel", note: "晚上休息" }
             ],
             "07/05": [
-                { id: 201, title: "上海國家資格考試 (虹君)", type: "exam", amap: "上海国家资格考试" },
-                { id: 202, title: "虹橋火車站 (午餐/乘車)", type: "transport", amap: "虹桥火车站" },
-                { id: 203, title: "朱家角車站 (抵達)", type: "spot", amap: "朱家角车站" },
-                { id: 204, title: "驢肉火燒 (宵夜)", type: "food", amap: "驴肉火烧" },
-                { id: 205, title: "華舒逸飯店 (朱家角店)", type: "hotel", amap: "华舒逸饭店（青浦区朱家角古镇店）" }
+                { title: "上海虹橋商務區凱悅嘉寓飯店", type: "hotel", note: "記得 Check-out" },
+                { title: "虹橋火車站", type: "station", note: "搭車前往朱家角" },
+                { title: "朱家角車站", type: "station", note: "下午抵達" },
+                { title: "驢肉火燒", type: "food", note: "宵夜導航" },
+                { title: "華舒逸飯店（朱家角古鎮店）", type: "hotel", note: "住宿地點" }
             ],
             "07/06": [
-                { id: 301, title: "靜安寺車站 (抵達)", type: "transport", amap: "静安寺车站" },
-                { id: 302, title: "滬西老弄堂麵館 (午餐)", type: "food", amap: "沪西老弄堂面馆" },
-                { id: 303, title: "安福路/田子坊/城隍廟/豫園", type: "spot", amap: "豫园" },
-                { id: 304, title: "小楊生煎 (宵夜)", type: "food", amap: "小杨生煎" },
-                { id: 305, title: "幾木筱築飯店 (靜安寺店)", type: "hotel", amap: "几木筱筑饭店（上海静安寺店）" }
+                { title: "靜安寺車站", type: "station", note: "前往靜安寺" },
+                { title: "滬西老弄堂麵館", type: "food", time: "10:00-15:00" },
+                { title: "安福路", type: "spot" },
+                { title: "田子坊", type: "spot" },
+                { title: "上海城隍廟", type: "spot", time: "08:30-16:30" },
+                { title: "豫園", type: "spot", note: "江南園林" },
+                { title: "小楊生煎", type: "food", note: "宵夜導航" },
+                { title: "幾木筱築飯店（上海靜安寺店）", type: "hotel" }
             ],
             "07/07": [
-                { id: 401, title: "星巴克臻選(上海烘焙工坊)", type: "food", amap: "星巴克臻选(上海烘焙工坊)" },
-                { id: 402, title: "上海四行倉庫抗戰紀念館", type: "spot", amap: "上海四行仓库抗战纪念馆" },
-                { id: 403, title: "南京路步行街", type: "spot", amap: "南京路步行街" },
-                { id: 404, title: "蟹叁寳·蟹家宴 (午餐)", type: "food", amap: "蟹叁寳·蟹家宴·蟹黄捞饭" },
-                { id: 405, title: "外灘 / 朵雲書院", type: "spot", amap: "外滩" },
-                { id: 406, title: "萊萊湯包 (宵夜)", type: "food", amap: "莱莱汤包" }
+                { title: "星巴克臻選(上海烘焙工坊)", type: "food" },
+                { title: "上海四行倉庫抗戰紀念館", type: "spot" },
+                { title: "南京路步行街", type: "spot" },
+                { title: "蟹叁寳·蟹家宴·蟹黃撈飯", type: "food" },
+                { title: "外灘", type: "spot" },
+                { title: "朵雲書院·旗艦店", type: "spot" },
+                { title: "萊萊湯包", type: "food", note: "宵夜導航" },
+                { title: "幾木筱築飯店（上海靜安寺店）", type: "hotel" }
             ],
             "07/08": [
-                { id: 501, title: "靜安寺周邊探索", type: "spot", amap: "静安寺车站" },
-                { id: 502, title: "奶奶的味道(膠州路店)", type: "food", amap: "奶奶的味道(胶州路店)" },
-                { id: 503, title: "上海虹橋機場 (返台)", type: "transport", amap: "上海虹桥机场" }
+                { title: "幾木筱築飯店（上海靜安寺店）", type: "hotel" },
+                { title: "靜安寺車站", type: "station", note: "前往虹橋" },
+                { title: "奶奶的味道(膠州路店)", type: "food" },
+                { title: "上海虹橋機場", type: "station", note: "返台航班" }
             ]
         };
 
-        function renderSchedules() {
-            const container = document.getElementById('main-container'); container.innerHTML = '';
+        const RECOMMEND_DB = {
+            "hotel": ["周邊便利店列表", "24H 藥局導航", "飯店自助早餐建議"],
+            "station": ["虹橋站內必吃炸豬排", "朱家角古鎮特色肉粽", "靜安寺周邊點心排隊店"]
+        };
+
+        function render() {
+            const main = document.getElementById('main-content');
+            main.innerHTML = '';
+            
             Object.keys(schedules).forEach(day => {
-                const section = document.createElement('section'); section.className = "mb-8";
-                section.innerHTML = `<h2 class="text-[10px] font-black italic mb-3 text-gray-400 tracking-widest border-l-2 border-red-800 pl-2">🗓️ ${day} 行程清單</h2><div id="list-${day.replace('/','-')}" class="sortable-list"></div>`;
-                container.appendChild(section);
-                
+                const dayHeader = document.createElement('div');
+                dayHeader.className = "text-sm font-bold text-gray-400 mt-6 mb-2 border-b";
+                dayHeader.innerText = `🗓️ ${day}`;
+                main.appendChild(dayHeader);
+
                 schedules[day].forEach(item => {
-                    const rec = getRecomm(item.title, day);
-                    const card = document.createElement('div'); card.className = "app-card p-4";
-                    card.dataset.id = item.id;
+                    const card = document.createElement('div');
+                    card.className = "app-card p-4 flex flex-col";
                     
                     let recommHtml = '';
-                    if (rec) {
-                        const spotLinks = rec.spots.map(s => `<button onclick="goAmap('${s}')" class="spot-link">📍 ${s}</button>`).join('');
-                        recommHtml = `<div class="mt-3 pt-3 border-t border-gray-100 text-[11px]">
-                            <div class="mb-1"><span class="recomm-badge">薦</span> <span class="text-gray-500">${rec.restaurants.join('・')}</span></div>
-                            <div class="flex flex-wrap">${spotLinks}</div></div>`;
+                    // 規則1：只有飯店與車站有推薦
+                    if (item.type === 'hotel' || item.type === 'station') {
+                        const list = RECOMMEND_DB[item.type];
+                        recommHtml = `
+                            <div class="recomm-box">
+                                <b class="text-red-800">💡 AI 建議行程：</b>
+                                <ul class="list-disc ml-4 mt-1">
+                                    ${list.map(l => `<li>${l}</li>`).join('')}
+                                </ul>
+                            </div>`;
                     }
 
                     card.innerHTML = `
                         <div class="flex justify-between items-start">
-                            <div class="flex-grow">
-                                <div class="text-[10px] text-red-800 font-bold opacity-50 mb-1 uppercase">${item.type}</div>
-                                <div class="font-bold text-gray-800 leading-tight">${CATEGORY_ICONS[item.type]} ${item.title}</div>
+                            <div>
+                                <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 uppercase">${item.type}</span>
+                                <h3 class="font-bold text-lg mt-1">${item.title}</h3>
+                                ${item.time ? `<span class="time-tag"><i class="far fa-clock"></i> ${item.time}</span>` : ''}
+                                ${item.note ? `<p class="text-xs text-gray-400 mt-1">${item.note}</p>` : ''}
                             </div>
-                            <button onclick="goAmap('${item.amap || item.title}')" class="text-red-800 active:scale-125 transition-all ml-2">
-                                <i class="fas fa-location-arrow text-lg"></i>
+                            <button onclick="goAmap('${item.title}')" class="bg-red-50 text-red-800 w-10 h-10 rounded-full flex items-center justify-center active:bg-red-200">
+                                <i class="fas fa-location-arrow"></i>
                             </button>
                         </div>
                         ${recommHtml}
-                        <textarea placeholder="點擊記錄備註..."></textarea>`;
-                    section.querySelector('.sortable-list').appendChild(card);
+                    `;
+                    main.appendChild(card);
                 });
             });
         }
 
         function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
-        function showTab(t) { /* 記帳切換邏輯... */ }
-        window.onload = renderSchedules;
+
+        function showTab(tab) {
+            const schTab = document.getElementById('schedule-tab');
+            const budTab = document.getElementById('budget-tab');
+            const btnSch = document.getElementById('btn-sch');
+            const btnBud = document.getElementById('btn-bud');
+
+            if (tab === 'schedule') {
+                schTab.classList.remove('hidden');
+                budTab.classList.add('hidden');
+                btnSch.classList.add('text-red-800'); btnSch.classList.remove('text-gray-400');
+                btnBud.classList.add('text-gray-400'); btnBud.classList.remove('text-red-800');
+            } else {
+                schTab.classList.add('hidden');
+                budTab.classList.remove('hidden');
+                btnBud.classList.add('text-red-800'); btnBud.classList.remove('text-gray-400');
+                btnSch.classList.add('text-gray-400'); btnSch.classList.remove('text-red-800');
+            }
+        }
+
+        window.onload = render;
     </script>
 </body>
 </html>
