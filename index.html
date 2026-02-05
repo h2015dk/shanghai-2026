@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>上海助手 V24 - 隨時編輯版</title>
+    <title>上海助手 V25 - 全行程管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -19,9 +19,9 @@
         .app-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #D4C5A2; margin-bottom: 12px; border-radius: 8px; overflow: hidden; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }
         .drag-handle { cursor: grab; color: #ccc; padding: 10px; }
         .nav-fixed { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px; z-index: 100; }
+        .time-tag { font-size: 11px; color: #B22222; font-weight: bold; background: #FFF0F0; padding: 2px 6px; border-radius: 4px; }
         textarea { width: 100%; font-size: 12px; border: 1px dashed #D4C5A2; background: #FDFCF8; padding: 8px; border-radius: 4px; outline: none; margin-top: 8px; color: #666; }
         .hidden { display: none; }
-        .modal { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
     </style>
 </head>
 <body>
@@ -30,9 +30,9 @@
             <header class="p-6 bg-[#B22222] text-white sticky top-0 z-50 flex justify-between items-center shadow-lg">
                 <div>
                     <h1 class="text-xl font-bold">上海行程導航</h1>
-                    <p class="text-[10px] opacity-80 uppercase tracking-widest">Add, Sort & Delete</p>
+                    <p class="text-[10px] opacity-80 uppercase tracking-widest">Full Schedule V25</p>
                 </div>
-                <button onclick="openModal()" class="w-10 h-10 bg-white text-red-800 rounded-full shadow-md active:scale-90 transition-transform flex items-center justify-center">
+                <button onclick="openModal()" class="w-10 h-10 bg-white text-red-800 rounded-full shadow-md flex items-center justify-center active:scale-90">
                     <i class="fas fa-plus"></i>
                 </button>
             </header>
@@ -48,7 +48,7 @@
                 <input id="exp-name" type="text" placeholder="品項" class="w-full border p-3 rounded-lg mb-2 text-sm">
                 <div class="flex gap-2">
                     <input id="exp-amount" type="number" placeholder="¥" class="flex-1 border p-3 rounded-lg text-sm">
-                    <select id="exp-cat" class="flex-1 border p-3 rounded-lg text-sm">
+                    <select id="exp-cat" class="flex-1 border p-3 rounded-lg text-sm font-bold">
                         <option value="用餐">用餐 🍜</option><option value="交通">交通 🚇</option>
                         <option value="住宿">住宿 🏨</option><option value="門票">門票 🎟️</option>
                         <option value="購物">購物 🛍️</option>
@@ -59,34 +59,25 @@
             <div id="expense-list" class="space-y-2"></div>
         </div>
 
-        <div id="add-modal" class="modal fixed inset-0 z-[200] hidden flex items-center justify-center p-6">
+        <div id="add-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
             <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
-                <h3 class="text-lg font-bold mb-4">新增行程點</h3>
+                <h3 class="text-lg font-bold mb-4 italic">新增行程點</h3>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-gray-400 font-bold">日期</label>
-                        <select id="input-day" class="w-full border p-2 rounded">
-                            <option value="07/04">07/04</option><option value="07/05">07/05</option>
-                            <option value="07/06">07/06</option><option value="07/07">07/07</option>
-                            <option value="07/08">07/08</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400 font-bold">類型</label>
-                        <select id="input-type" class="w-full border p-2 rounded">
-                            <option value="spot">📍 景點</option><option value="station">🚇 車站</option>
-                            <option value="hotel">🏨 飯店</option><option value="food">🍜 餐廳</option>
-                            <option value="exam">✍️ 考試</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400 font-bold">名稱</label>
-                        <input id="input-title" type="text" class="w-full border p-2 rounded" placeholder="例如：外灘">
-                    </div>
+                    <select id="input-day" class="w-full border p-2 rounded">
+                        <option value="07/04">07/04</option><option value="07/05">07/05</option>
+                        <option value="07/06">07/06</option><option value="07/07">07/07</option>
+                        <option value="07/08">07/08</option>
+                    </select>
+                    <select id="input-type" class="w-full border p-2 rounded">
+                        <option value="spot">📍 景點</option><option value="station">🚇 車站</option>
+                        <option value="hotel">🏨 飯店</option><option value="food">🍜 餐廳</option>
+                        <option value="exam">✍️ 考試</option>
+                    </select>
+                    <input id="input-title" type="text" class="w-full border p-2 rounded" placeholder="地點名稱">
                 </div>
                 <div class="flex gap-2 mt-6">
                     <button onclick="closeModal()" class="flex-1 py-3 text-gray-400 font-bold">取消</button>
-                    <button onclick="addNewSchedule()" class="flex-1 py-3 bg-red-800 text-white rounded-lg font-bold">確定新增</button>
+                    <button onclick="addNewSchedule()" class="flex-1 py-3 bg-red-800 text-white rounded-lg font-bold">新增</button>
                 </div>
             </div>
         </div>
@@ -104,23 +95,54 @@
     <script>
         const TYPE_ICONS = { station: '🚇', hotel: '🏨', food: '🍜', spot: '📍', exam: '✍️' };
         
-        let schedules = JSON.parse(localStorage.getItem('sh_v24_sch')) || {
-            "07/04": [{ id: 1, title: "上海虹橋站", type: "station", note: "" }],
-            "07/05": [{ id: 2, title: "上海國家資格考試", type: "exam", note: "" }],
-            "07/06": [{ id: 3, title: "靜安寺車站", type: "station", note: "" }],
-            "07/07": [{ id: 4, title: "外灘", type: "spot", note: "" }],
-            "07/08": [{ id: 5, title: "虹橋機場", type: "station", note: "" }]
+        // 恢復 V23 完整行程清單
+        let defaultSchedules = {
+            "07/04": [
+                { id: 1, title: "上海虹橋站", type: "station", note: "14:15抵達" },
+                { id: 2, title: "上海虹橋商務區凱悅嘉寓飯店", type: "hotel", note: "" }
+            ],
+            "07/05": [
+                { id: 3, title: "上海國家資格考試", type: "exam", note: "虹君考試，秉圻自行遊玩" },
+                { id: 4, title: "虹橋火車站", type: "station", note: "" },
+                { id: 5, title: "朱家角車站", type: "station", note: "" },
+                { id: 6, title: "驢肉火燒", type: "food", note: "宵夜" },
+                { id: 7, title: "華舒逸飯店（青浦區朱家角古鎮店）", type: "hotel", note: "" }
+            ],
+            "07/06": [
+                { id: 8, title: "靜安寺車站", type: "station", note: "" },
+                { id: 9, title: "滬西老弄堂麵館", type: "food", time: "10:00-15:00", note: "" },
+                { id: 10, title: "安福路", type: "spot", note: "" },
+                { id: 11, title: "田子坊", type: "spot", note: "" },
+                { id: 12, title: "上海城隍廟", type: "spot", time: "08:30-16:30", note: "" },
+                { id: 13, title: "豫園", type: "spot", note: "" },
+                { id: 14, title: "小楊生煎", type: "food", note: "宵夜" },
+                { id: 15, title: "幾木筱築飯店（上海靜安寺店）", type: "hotel", note: "" }
+            ],
+            "07/07": [
+                { id: 16, title: "星巴克臻選(上海烘焙工坊)", type: "food", note: "" },
+                { id: 17, title: "上海四行倉庫抗戰紀念館", type: "spot", note: "" },
+                { id: 18, title: "南京路步行街", type: "spot", note: "" },
+                { id: 19, title: "蟹叁寳·蟹家宴·蟹黃撈飯", type: "food", note: "" },
+                { id: 20, title: "外灘", type: "spot", note: "" },
+                { id: 21, title: "朵雲書院·旗艦店", type: "spot", note: "" },
+                { id: 22, title: "萊萊湯包", type: "food", note: "宵夜" }
+            ],
+            "07/08": [
+                { id: 23, title: "靜安寺車站", type: "station", note: "" },
+                { id: 24, title: "奶奶的味道(膠州路店)", type: "food", note: "" },
+                { id: 25, title: "上海虹橋機場", type: "station", note: "返程" }
+            ]
         };
 
-        let expenses = JSON.parse(localStorage.getItem('sh_v24_exp')) || [];
+        let schedules = JSON.parse(localStorage.getItem('sh_v25_sch')) || defaultSchedules;
+        let expenses = JSON.parse(localStorage.getItem('sh_v25_exp')) || [];
 
         function render() {
             const main = document.getElementById('main-content');
             main.innerHTML = '';
-            
             Object.keys(schedules).forEach(day => {
                 const dayHeader = document.createElement('div');
-                dayHeader.className = "text-[10px] font-bold text-gray-400 mt-6 mb-2 border-b uppercase";
+                dayHeader.className = "text-[10px] font-black text-gray-400 mt-6 mb-2 border-b uppercase tracking-widest";
                 dayHeader.innerText = `🗓️ ${day}`;
                 main.appendChild(dayHeader);
 
@@ -136,64 +158,46 @@
                         <div class="drag-handle mt-1"><i class="fas fa-grip-vertical"></i></div>
                         <div class="flex-grow">
                             <div class="flex justify-between items-start mr-8">
-                                <h3 class="font-bold text-md">${TYPE_ICONS[item.type]} ${item.title}</h3>
+                                <div>
+                                    <h3 class="font-bold text-md">${TYPE_ICONS[item.type]} ${item.title}</h3>
+                                    ${item.time ? `<span class="time-tag">🕓 ${item.time}</span>` : ''}
+                                </div>
                                 <button onclick="goAmap('${item.title}')" class="text-red-800"><i class="fas fa-compass text-xl"></i></button>
                             </div>
-                            <button onclick="deleteSchedule('${day}', ${item.id})" class="absolute top-2 right-2 text-gray-200 hover:text-red-500 p-2">
-                                <i class="fas fa-times"></i>
-                            </button>
-                            <textarea onblur="updateNote('${day}', ${item.id}, this.value)" placeholder="點擊編輯備註...">${item.note || ''}</textarea>
+                            <button onclick="deleteSchedule('${day}', ${item.id})" class="absolute top-2 right-2 text-gray-200 hover:text-red-500 p-2"><i class="fas fa-times"></i></button>
+                            <textarea onblur="updateNote('${day}', ${item.id}, this.value)" placeholder="編輯備註...">${item.note || ''}</textarea>
                         </div>
                     `;
                     listWrap.appendChild(card);
                 });
-
                 new Sortable(listWrap, { animation: 150, handle: '.drag-handle', onEnd: () => saveOrder(day, listWrap) });
             });
         }
 
-        // 新增/刪除邏輯
+        // 行程管理邏輯
         function openModal() { document.getElementById('add-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('add-modal').classList.add('hidden'); }
-
         function addNewSchedule() {
-            const day = document.getElementById('input-day').value;
-            const type = document.getElementById('input-type').value;
-            const title = document.getElementById('input-title').value;
-            
-            if(!title) return alert("請輸入名稱");
-            
-            const newItem = { id: Date.now(), title, type, note: "" };
-            schedules[day].push(newItem);
-            
+            const d = document.getElementById('input-day').value, t = document.getElementById('input-type').value, title = document.getElementById('input-title').value;
+            if(!title) return;
+            schedules[d].push({ id: Date.now(), title, type: t, note: "" });
             saveAll(); render(); closeModal();
-            document.getElementById('input-title').value = "";
         }
-
         function deleteSchedule(day, id) {
-            if(confirm("確定要刪除這個行程嗎？")) {
-                schedules[day] = schedules[day].filter(i => i.id !== id);
-                saveAll(); render();
-            }
+            if(confirm("刪除此行程？")) { schedules[day] = schedules[day].filter(i => i.id !== id); saveAll(); render(); }
         }
-
         function saveOrder(day, listWrap) {
             const newOrderIds = Array.from(listWrap.children).map(card => parseInt(card.dataset.id));
-            const reordered = newOrderIds.map(id => schedules[day].find(item => item.id === id));
-            schedules[day] = reordered;
+            schedules[day] = newOrderIds.map(id => schedules[day].find(item => item.id === id));
             saveAll();
         }
-
         function updateNote(day, id, val) {
-            const item = schedules[day].find(i => i.id === id);
-            if(item) item.note = val;
-            saveAll();
+            const item = schedules[day].find(i => i.id === id); if(item) item.note = val; saveAll();
         }
-
-        function saveAll() { localStorage.setItem('sh_v24_sch', JSON.stringify(schedules)); }
+        function saveAll() { localStorage.setItem('sh_v25_sch', JSON.stringify(schedules)); }
         function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
 
-        // 記帳與分頁邏輯 (維持 V23)
+        // 記帳邏輯
         function addExpense() {
             const n = document.getElementById('exp-name'), a = document.getElementById('exp-amount'), c = document.getElementById('exp-cat');
             if(n.value && a.value) {
@@ -202,16 +206,13 @@
             }
         }
         function renderExpenses() {
-            const list = document.getElementById('expense-list');
-            let total = 0; list.innerHTML = '';
+            const list = document.getElementById('expense-list'); let total = 0; list.innerHTML = '';
             expenses.slice().reverse().forEach(ex => {
                 total += ex.amount;
-                list.innerHTML += `<div class="bg-white p-3 rounded-lg flex justify-between border-l-4 border-black text-sm">
-                    <span><b>${ex.cat}</b> ${ex.name}</span><span class="font-bold">¥${ex.amount}</span>
-                </div>`;
+                list.innerHTML += `<div class="bg-white p-3 rounded-lg flex justify-between border-l-4 border-black text-sm"><span><b>${ex.cat}</b> ${ex.name}</span><span class="font-bold">¥${ex.amount}</span></div>`;
             });
             document.getElementById('total-display').innerText = `¥ ${total.toFixed(2)}`;
-            localStorage.setItem('sh_v24_exp', JSON.stringify(expenses));
+            localStorage.setItem('sh_v25_exp', JSON.stringify(expenses));
         }
         function showTab(tab) {
             document.getElementById('schedule-tab').classList.toggle('hidden', tab === 'budget');
@@ -220,7 +221,6 @@
             document.getElementById('btn-bud').style.color = tab === 'budget' ? '#B22222' : '#ccc';
             if(tab === 'budget') renderExpenses();
         }
-
         window.onload = render;
     </script>
 </body>
