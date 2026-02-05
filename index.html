@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>上海助手 V25 - 全行程管理</title>
+    <title>上海助手 V26 - 標題強化</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -16,6 +16,22 @@
             background-attachment: fixed; background-position: center; background-size: cover;
         }
         .responsive-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background: rgba(244, 241, 225, 0.85); padding-bottom: 100px; position: relative; }
+        
+        /* 強化後的日期標題樣式 */
+        .day-header {
+            font-size: 24px; /* 字體放大 */
+            font-weight: 900;
+            color: var(--mo-black);
+            margin-top: 40px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 3px solid var(--zhusha-red);
+            padding-bottom: 4px;
+            letter-spacing: 2px;
+        }
+
         .app-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #D4C5A2; margin-bottom: 12px; border-radius: 8px; overflow: hidden; box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }
         .drag-handle { cursor: grab; color: #ccc; padding: 10px; }
         .nav-fixed { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px; z-index: 100; }
@@ -30,7 +46,7 @@
             <header class="p-6 bg-[#B22222] text-white sticky top-0 z-50 flex justify-between items-center shadow-lg">
                 <div>
                     <h1 class="text-xl font-bold">上海行程導航</h1>
-                    <p class="text-[10px] opacity-80 uppercase tracking-widest">Full Schedule V25</p>
+                    <p class="text-[10px] opacity-80 uppercase tracking-widest">Enhanced UI V26</p>
                 </div>
                 <button onclick="openModal()" class="w-10 h-10 bg-white text-red-800 rounded-full shadow-md flex items-center justify-center active:scale-90">
                     <i class="fas fa-plus"></i>
@@ -95,7 +111,6 @@
     <script>
         const TYPE_ICONS = { station: '🚇', hotel: '🏨', food: '🍜', spot: '📍', exam: '✍️' };
         
-        // 恢復 V23 完整行程清單
         let defaultSchedules = {
             "07/04": [
                 { id: 1, title: "上海虹橋站", type: "station", note: "14:15抵達" },
@@ -134,16 +149,17 @@
             ]
         };
 
-        let schedules = JSON.parse(localStorage.getItem('sh_v25_sch')) || defaultSchedules;
-        let expenses = JSON.parse(localStorage.getItem('sh_v25_exp')) || [];
+        let schedules = JSON.parse(localStorage.getItem('sh_v26_sch')) || defaultSchedules;
+        let expenses = JSON.parse(localStorage.getItem('sh_v26_exp')) || [];
 
         function render() {
             const main = document.getElementById('main-content');
             main.innerHTML = '';
             Object.keys(schedules).forEach(day => {
+                // 這裡套用了強化後的樣式
                 const dayHeader = document.createElement('div');
-                dayHeader.className = "text-[10px] font-black text-gray-400 mt-6 mb-2 border-b uppercase tracking-widest";
-                dayHeader.innerText = `🗓️ ${day}`;
+                dayHeader.className = "day-header";
+                dayHeader.innerHTML = `<span>📜</span> <span>${day}</span>`;
                 main.appendChild(dayHeader);
 
                 const listWrap = document.createElement('div');
@@ -174,7 +190,6 @@
             });
         }
 
-        // 行程管理邏輯
         function openModal() { document.getElementById('add-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('add-modal').classList.add('hidden'); }
         function addNewSchedule() {
@@ -194,10 +209,9 @@
         function updateNote(day, id, val) {
             const item = schedules[day].find(i => i.id === id); if(item) item.note = val; saveAll();
         }
-        function saveAll() { localStorage.setItem('sh_v25_sch', JSON.stringify(schedules)); }
+        function saveAll() { localStorage.setItem('sh_v26_sch', JSON.stringify(schedules)); }
         function goAmap(k) { window.location.href = `amapuri://route/plan/?dname=${encodeURIComponent(k)}&dev=0&t=1`; }
 
-        // 記帳邏輯
         function addExpense() {
             const n = document.getElementById('exp-name'), a = document.getElementById('exp-amount'), c = document.getElementById('exp-cat');
             if(n.value && a.value) {
@@ -212,7 +226,7 @@
                 list.innerHTML += `<div class="bg-white p-3 rounded-lg flex justify-between border-l-4 border-black text-sm"><span><b>${ex.cat}</b> ${ex.name}</span><span class="font-bold">¥${ex.amount}</span></div>`;
             });
             document.getElementById('total-display').innerText = `¥ ${total.toFixed(2)}`;
-            localStorage.setItem('sh_v25_exp', JSON.stringify(expenses));
+            localStorage.setItem('sh_v26_exp', JSON.stringify(expenses));
         }
         function showTab(tab) {
             document.getElementById('schedule-tab').classList.toggle('hidden', tab === 'budget');
